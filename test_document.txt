@@ -1,0 +1,14 @@
+DOCUMENTO DE PRUEBA PARA FIRMA DIGITAL
+
+Este es un documento de ejemplo que será utilizado para probar la funcionalidad de firma digital con datos del firmante.
+
+El sistema ahora incluye los siguientes campos:
+- Nombre y Apellido del firmante
+- DNI o identificación
+- Cargo (opcional)
+- Institución (opcional)
+- Email (opcional)
+
+Esta información aparecerá en el PDF firmado para proporcionar mayor legitimidad y trazabilidad a la firma digital.
+
+Fecha de creación: $(date)

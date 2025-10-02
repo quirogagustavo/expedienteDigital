@@ -1,0 +1,1438 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0;
+  min-height: 100vh;
+}
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar {
+  background: #646cff;
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logout-btn {
+  background: rgba(255,255,255,0.2);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.3);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.auth-container {
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.form-group input {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.form-group select {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  background: white;
+  cursor: pointer;
+}
+
+.form-group select:focus {
+  border-color: #646cff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
+}
+
+.help-text {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.4;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: #646cff;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 1.2rem;
+}
+
+.container {
+  flex: 1;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+input[type="file"] {
+  margin-bottom: 1rem;
+}
+
+button {
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 4px;
+  border: none;
+  background: #646cff;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
+  background: #535bf2;
+}
+
+.response {
+  margin-top: 2rem;
+  background: #f6f8fa;
+  padding: 1rem;
+  border-radius: 6px;
+  text-align: left;
+}
+
+.card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 2rem;
+  margin-top: 2rem;
+}
+
+.error {
+  color: #d32f2f;
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background: #ffebee;
+  border-radius: 4px;
+}
+
+/* Estilos para el selector de tipos de certificados */
+.certificate-type-selector {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.certificate-type-selector h3 {
+  margin-bottom: 0.5rem;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.subtitle {
+  color: #666;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.certificate-types-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.certificate-type-card {
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #fafafa;
+}
+
+.certificate-type-card:hover {
+  border-color: #646cff;
+  background: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.certificate-type-card.selected {
+  border-color: #646cff;
+  background: #f0f4ff;
+  box-shadow: 0 4px 12px rgba(100, 108, 255, 0.3);
+}
+
+.certificate-type-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.certificate-type-icon {
+  font-size: 1.5rem;
+}
+
+.certificate-type-header h4 {
+  margin: 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.certificate-type-description {
+  color: #666;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.certificate-type-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: #555;
+  font-size: 0.85rem;
+}
+
+.detail-value {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.verification-required {
+  color: #f57c00;
+}
+
+.selected-indicator {
+  background: #646cff;
+  color: white;
+  padding: 0.5rem;
+  border-radius: 4px;
+  text-align: center;
+  margin-top: 1rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Estilos para las autoridades certificadoras */
+.authorities-info {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 1.5rem;
+}
+
+.authorities-info h4 {
+  margin-bottom: 1rem;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.authorities-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 0.75rem;
+}
+
+.authority-card {
+  background: #f5f5f5;
+  border-radius: 6px;
+  padding: 1rem;
+  border-left: 4px solid #646cff;
+}
+
+.authority-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.authority-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.authority-country {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.trusted-badge {
+  background: #4caf50;
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.authority-type {
+  color: #666;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* Estilos para navegación de pestañas */
+.main-nav {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 2rem 0;
+  padding: 0 2rem;
+  flex-wrap: wrap;
+}
+
+.main-nav button {
+  background: white;
+  color: #646cff;
+  border: 2px solid #646cff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 160px;
+  justify-content: center;
+}
+
+.main-nav button:hover {
+  background: #646cff;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(100, 108, 255, 0.3);
+}
+
+.main-nav button.active {
+  background: #646cff;
+  color: white;
+  box-shadow: 0 4px 12px rgba(100, 108, 255, 0.4);
+}
+
+.main-nav button:active {
+  transform: translateY(0);
+}
+
+.tab-content {
+  min-height: 400px;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive design para la navegación */
+@media (max-width: 768px) {
+  .main-nav {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0 1rem;
+  }
+  
+  .main-nav button {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .container {
+    padding: 1rem;
+  }
+  
+  .container h1 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Ajustes para el título con enfoque gubernamental */
+.container h1 {
+  color: #2c3e50;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  text-align: center;
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Estilos para gestión de tokens criptográficos */
+.token-manager {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 2rem 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: 1px solid #e0e0e0;
+}
+
+.token-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.token-header h3 {
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  font-size: 1.8rem;
+}
+
+.token-header .subtitle {
+  color: #666;
+  font-size: 1rem;
+  margin: 0 0 1rem 0;
+}
+
+.refresh-tokens-btn {
+  background: #646cff;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.refresh-tokens-btn:hover {
+  background: #535bf2;
+}
+
+/* Estados de carga */
+.loading-state {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+}
+
+.spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #646cff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Mensajes de error */
+.error-message {
+  background: #ffebee;
+  color: #c62828;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border-left: 4px solid #f44336;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.error-message span {
+  font-size: 1.2rem;
+}
+
+.retry-btn {
+  background: #f44336;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-left: auto;
+}
+
+.retry-btn:hover {
+  background: #d32f2f;
+}
+
+/* Estado sin tokens */
+.no-tokens {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+}
+
+.no-tokens .icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.no-tokens h4 {
+  color: #444;
+  margin-bottom: 0.5rem;
+}
+
+.refresh-btn {
+  background: #646cff;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-top: 1rem;
+}
+
+.refresh-btn:hover {
+  background: #535bf2;
+}
+
+/* Lista de tokens */
+.tokens-list h4 {
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+  font-size: 1.3rem;
+}
+
+.token-card {
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+  background: #fafafa;
+}
+
+.token-card:hover {
+  border-color: #646cff;
+  background: white;
+  box-shadow: 0 4px 12px rgba(100, 108, 255, 0.2);
+}
+
+.token-card.selected {
+  border-color: #4CAF50;
+  background: #f0f8f0;
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
+}
+
+.token-info {
+  display: flex;
+  align-items: center;
+  padding: 1.5rem;
+  gap: 1.5rem;
+}
+
+.token-icon {
+  font-size: 3rem;
+  min-width: 60px;
+  text-align: center;
+}
+
+.token-details {
+  flex: 1;
+}
+
+.token-details h5 {
+  color: #2c3e50;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.token-model {
+  color: #666;
+  margin: 0 0 0.25rem 0;
+  font-size: 0.95rem;
+}
+
+.token-serial {
+  color: #888;
+  margin: 0 0 0.75rem 0;
+  font-size: 0.85rem;
+  font-family: monospace;
+}
+
+.token-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+/* Acciones del token */
+.token-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 140px;
+}
+
+.select-token-btn {
+  background: #646cff;
+  color: white;
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.select-token-btn:hover:not(:disabled) {
+  background: #535bf2;
+}
+
+.select-token-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.authenticated-state {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.auth-success {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4CAF50;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.logout-token-btn {
+  background: #ff9800;
+  color: white;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.logout-token-btn:hover {
+  background: #f57c00;
+}
+
+/* Información de certificados */
+.certificates-info {
+  border-top: 1px solid #e0e0e0;
+  padding: 1rem 1.5rem;
+  background: rgba(100, 108, 255, 0.05);
+}
+
+.certificates-info h6 {
+  color: #2c3e50;
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+}
+
+.certificate-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.certificate-item:last-child {
+  border-bottom: none;
+}
+
+.cert-subject {
+  font-weight: 500;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.cert-validity {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+/* Diálogo de PIN */
+.pin-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.pin-dialog {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  min-width: 400px;
+  max-width: 500px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pin-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.pin-header h4 {
+  color: #2c3e50;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.4rem;
+}
+
+.pin-header p {
+  color: #666;
+  margin: 0.25rem 0;
+  font-size: 1rem;
+}
+
+.token-serial {
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: #888;
+}
+
+/* Información detallada del token en el diálogo */
+.token-info-detail {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-left: 4px solid #646cff;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-row.warning {
+  color: #f57c00;
+  font-weight: 500;
+}
+
+.info-row .label {
+  font-weight: 500;
+  color: #555;
+}
+
+.info-row .value {
+  color: #333;
+}
+
+/* Ayuda para PIN mejorada */
+.demo-help,
+.real-help {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.demo-help {
+  background: #fff3e0;
+  color: #f57c00;
+  border: 1px solid #ffcc02;
+}
+
+.demo-help code {
+  background: #f57c00;
+  color: white;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-weight: bold;
+}
+
+.real-help {
+  background: #e3f2fd;
+  color: #1976d2;
+  border: 1px solid #2196f3;
+}
+
+.pin-error small {
+  display: block;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+/* Mensaje de éxito para descarga */
+.success-message {
+  background: #e8f5e8;
+  color: #2e7d32;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #4CAF50;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  animation: slideDown 0.3s ease-out;
+}
+
+.success-message span {
+  font-size: 1.2rem;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pin-input-container {
+  margin-bottom: 1.5rem;
+}
+
+.pin-input-container label {
+  display: block;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.pin-input {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  text-align: center;
+  letter-spacing: 0.1em;
+  font-family: monospace;
+  transition: border-color 0.2s;
+}
+
+.pin-input:focus {
+  outline: none;
+  border-color: #646cff;
+  box-shadow: 0 0 0 3px rgba(100, 108, 255, 0.1);
+}
+
+.pin-help {
+  color: #666;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  display: block;
+}
+
+.pin-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.cancel-btn {
+  background: #f5f5f5;
+  color: #666;
+  border: 1px solid #ddd;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.cancel-btn:hover:not(:disabled) {
+  background: #eeeeee;
+}
+
+.authenticate-btn {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.authenticate-btn:hover:not(:disabled) {
+  background: #45a049;
+}
+
+.authenticate-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.pin-error {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #ffebee;
+  color: #c62828;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* Responsive design para tokens */
+@media (max-width: 768px) {
+  .token-manager {
+    padding: 1rem;
+    margin: 1rem 0;
+  }
+  
+  .token-info {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .token-actions {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .pin-dialog {
+    margin: 1rem;
+    min-width: auto;
+    max-width: none;
+  }
+  
+  .pin-actions {
+    flex-direction: column;
+  }
+}
+
+/* Estilos para firma digital con token */
+.signature-with-token {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.signature-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.signature-header h2 {
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  font-size: 2rem;
+}
+
+.signature-header .subtitle {
+  color: #666;
+  font-size: 1.1rem;
+  margin: 0;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Selector de modo de firma */
+.signature-mode-selector {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border: 1px solid #e0e0e0;
+}
+
+.signature-mode-selector h3 {
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+  font-size: 1.3rem;
+}
+
+.mode-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.mode-option {
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #fafafa;
+  display: block;
+}
+
+.mode-option:hover {
+  border-color: #646cff;
+  background: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(100, 108, 255, 0.2);
+}
+
+.mode-option.selected {
+  border-color: #4CAF50;
+  background: #f0f8f0;
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
+}
+
+.mode-option input[type="radio"] {
+  display: none;
+}
+
+.mode-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.mode-icon {
+  font-size: 2.5rem;
+  min-width: 50px;
+}
+
+.mode-info {
+  flex: 1;
+}
+
+.mode-info strong {
+  display: block;
+  color: #2c3e50;
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.mode-info small {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Selección de archivo */
+.file-selection {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border: 1px solid #e0e0e0;
+}
+
+.file-selection h3 {
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+  font-size: 1.3rem;
+}
+
+.file-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.file-input {
+  padding: 1rem;
+  border: 2px dashed #646cff;
+  border-radius: 8px;
+  background: #f8f9ff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.file-input:hover {
+  border-color: #535bf2;
+  background: #f0f4ff;
+}
+
+.selected-file-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #e8f5e8;
+  border-radius: 8px;
+  border: 1px solid #4CAF50;
+}
+
+.file-icon {
+  font-size: 2rem;
+}
+
+.file-details strong {
+  display: block;
+  color: #2c3e50;
+  margin-bottom: 0.25rem;
+}
+
+.file-details small {
+  color: #666;
+}
+
+/* Acciones de firma */
+.signature-actions {
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.sign-with-token-btn,
+.sign-internal-btn {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.sign-with-token-btn:hover:not(:disabled),
+.sign-internal-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.sign-with-token-btn:disabled,
+.sign-internal-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Resultado de la firma */
+.signature-result {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  margin-top: 2rem;
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.2);
+  border: 2px solid #4CAF50;
+}
+
+.result-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e8f5e8;
+}
+
+.result-header h3 {
+  color: #4CAF50;
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+}
+
+.result-header p {
+  color: #666;
+  margin: 0;
+}
+
+.result-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.result-section {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #4CAF50;
+}
+
+.result-section h4 {
+  color: #2c3e50;
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+}
+
+.result-section p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.signature-hash {
+  background: #f0f0f0;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.8rem;
+  word-break: break-all;
+}
+
+.result-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+
+.download-options {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.download-pdf-btn,
+.download-json-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.download-pdf-btn {
+  background: linear-gradient(135deg, #646cff 0%, #535bf2 100%);
+  color: white;
+}
+
+.download-pdf-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(100, 108, 255, 0.4);
+}
+
+.download-json-btn {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+}
+
+.download-json-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+}
+
+.download-help {
+  color: #666;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+.result-actions > .verify-btn {
+  min-width: 200px;
+}
+
+.download-btn,
+.verify-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.download-btn {
+  background: #646cff;
+  color: white;
+  border: none;
+}
+
+.download-btn:hover {
+  background: #535bf2;
+  transform: translateY(-2px);
+}
+
+.verify-btn {
+  background: white;
+  color: #646cff;
+  border: 2px solid #646cff;
+}
+
+.verify-btn:hover {
+  background: #646cff;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Información de firma en el prompt */
+.signing-info {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-left: 4px solid #646cff;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.info-item:last-child {
+  margin-bottom: 0;
+}
+
+.confirm-sign-btn {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.confirm-sign-btn:hover:not(:disabled) {
+  background: #45a049;
+}
+
+.confirm-sign-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Responsive design para firma con token */
+@media (max-width: 768px) {
+  .signature-with-token {
+    padding: 1rem;
+  }
+  
+  .mode-options {
+    grid-template-columns: 1fr;
+  }
+  
+  .result-details {
+    grid-template-columns: 1fr;
+  }
+  
+  .result-actions {
+    flex-direction: column;
+  }
+  
+  .signature-header h2 {
+    font-size: 1.5rem;
+  }
+}

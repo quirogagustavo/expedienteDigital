@@ -1,0 +1,10 @@
+Este es un documento de ejemplo para probar la firma digital.
+
+Contenido del documento:
+- Nombre del proyecto: Sistema de Firma Digital
+- Fecha: 22 de septiembre de 2025
+- Propósito: Demostración de funcionalidad
+
+Este documento será firmado digitalmente usando nuestro sistema de firma digital con certificados RSA.
+
+Firma: ________________
