@@ -1,4 +1,4 @@
-# 🔐 Sistema de Firma Digital - Gobierno de San Juan
+# 🔐 Sistema de Firma Digital
 
 <div align="center">
 
