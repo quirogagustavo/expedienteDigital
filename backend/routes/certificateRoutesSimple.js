@@ -49,14 +49,6 @@ router.get('/certificate-types', authenticateToken, async (req, res) => {
         validity_level: 'government',
         processing_time: '3-5 días hábiles',
         requires_identity_verification: true
-      },
-      {
-        id: 3,
-        name: 'commercial_certified',
-        description: 'Certificado comercial certificado para transacciones comerciales y documentos con validez legal.',
-        validity_level: 'legal',
-        processing_time: '1-2 días hábiles',
-        requires_identity_verification: true
       }
     ];
 

@@ -225,7 +225,6 @@ router.get('/verify/:id', authenticateToken, async (req, res) => {
       },
       overall_status: certificate.activo ? 'VALID' : 'INVALID',
       trust_level: certificate.certificate_type_id === 2 ? 'HIGH' : // Gubernamental
-                   certificate.certificate_type_id === 3 ? 'HIGH' : // Comercial
                    'MEDIUM' // Interno
     };
 

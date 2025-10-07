@@ -114,6 +114,11 @@ const Signature = sequelize.define('Signature', {
     allowNull: true,
     comment: 'Número de expediente asociado al documento'
   },
+  batch_id: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    comment: 'ID del batch de firma (para firmas en lote)'
+  },
   
   // 🔐 VALIDACIONES ADICIONALES
   crl_check_status: {

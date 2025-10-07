@@ -5,15 +5,45 @@ import Document from './Document.js';
 import Signature from './Signature.js';
 import sequelizeExtended, { initializeDefaultData } from './databaseExtended.js';
 
+// Importar modelos de expedientes
+import createExpedienteModel from './Expediente.js';
+import createExpedienteDocumentoModel from './ExpedienteDocumento.js';
+import createFirmaBatchModel from './FirmaBatch.js';
+
+// Importar modelos de firmas
+import createUsuarioFirmaModel from './UsuarioFirma.js';
+import createFirmaHistorialModel from './FirmaHistorial.js';
+
+const Expediente = createExpedienteModel(sequelize);
+const ExpedienteDocumento = createExpedienteDocumentoModel(sequelize);
+const FirmaBatch = createFirmaBatchModel(sequelize);
+const UsuarioFirma = createUsuarioFirmaModel(sequelize);
+const FirmaHistorial = createFirmaHistorialModel(sequelize);
+
 // Sincronizar todos los modelos con la base de datos
 const syncDatabase = async () => {
   try {
     await sequelize.authenticate();
     console.log('Conexión a la base de datos establecida correctamente.');
     
+    // Definir asociaciones para modelos de expedientes
+    defineAssociations();
+    
     // Sincronizar modelos básicos sin alterar estructura existente
     await sequelize.sync({ force: false });
     console.log('Tablas básicas sincronizadas correctamente.');
+
+    // Agregar campos nuevos manualmente si no existen
+    try {
+      await sequelize.query(`
+        ALTER TABLE expediente_documentos 
+        ADD COLUMN IF NOT EXISTS hash_firma VARCHAR(512),
+        ADD COLUMN IF NOT EXISTS usuario_firmante INTEGER REFERENCES usuarios(id)
+      `);
+      console.log('Campos de firma agregados correctamente.');
+    } catch (error) {
+      console.log('Los campos de firma ya existen o hubo un error:', error.message);
+    }
 
     // Sincronizar modelos extendidos para CA híbrida
     await sequelizeExtended.authenticate();
@@ -30,11 +60,119 @@ const syncDatabase = async () => {
   }
 };
 
+// Definir asociaciones entre modelos
+const defineAssociations = () => {
+  // Relaciones para Expediente
+  Expediente.belongsTo(Usuario, {
+    foreignKey: 'usuario_responsable',
+    as: 'responsable'
+  });
+  
+  Usuario.hasMany(Expediente, {
+    foreignKey: 'usuario_responsable',
+    as: 'expedientes'
+  });
+  
+  // Relaciones para ExpedienteDocumento
+  ExpedienteDocumento.belongsTo(Expediente, {
+    foreignKey: 'expediente_id',
+    as: 'expediente'
+  });
+  
+  Expediente.hasMany(ExpedienteDocumento, {
+    foreignKey: 'expediente_id',
+    as: 'documentos'
+  });
+  
+  ExpedienteDocumento.belongsTo(Usuario, {
+    foreignKey: 'usuario_creador',
+    as: 'creator'
+  });
+  
+  ExpedienteDocumento.belongsTo(Usuario, {
+    foreignKey: 'usuario_firmante',
+    as: 'firmante'
+  });
+  
+  ExpedienteDocumento.belongsTo(Signature, {
+    foreignKey: 'signature_id',
+    as: 'signature'
+  });
+  
+  // Relaciones para FirmaBatch
+  FirmaBatch.belongsTo(Expediente, {
+    foreignKey: 'expediente_id',
+    as: 'expediente'
+  });
+  
+  Expediente.hasMany(FirmaBatch, {
+    foreignKey: 'expediente_id',
+    as: 'firmasBatch'
+  });
+  
+  FirmaBatch.belongsTo(Usuario, {
+    foreignKey: 'usuario_firmante',
+    as: 'firmante'
+  });
+  
+  FirmaBatch.belongsTo(Certificado, {
+    foreignKey: 'certificado_usado',
+    as: 'certificado'
+  });
+
+  // Relaciones para UsuarioFirma
+  UsuarioFirma.belongsTo(Usuario, {
+    foreignKey: 'usuario_id',
+    as: 'usuario'
+  });
+
+  UsuarioFirma.belongsTo(Usuario, {
+    foreignKey: 'subida_por',
+    as: 'subidaPor'
+  });
+
+  Usuario.hasMany(UsuarioFirma, {
+    foreignKey: 'usuario_id',
+    as: 'firmasVisuales'
+  });
+
+  // Relaciones para FirmaHistorial
+  FirmaHistorial.belongsTo(UsuarioFirma, {
+    foreignKey: 'usuario_firma_id',
+    as: 'usuarioFirma'
+  });
+
+  FirmaHistorial.belongsTo(ExpedienteDocumento, {
+    foreignKey: 'documento_id',
+    as: 'documento'
+  });
+
+  FirmaHistorial.belongsTo(Expediente, {
+    foreignKey: 'expediente_id',
+    as: 'expediente'
+  });
+
+  FirmaHistorial.belongsTo(Usuario, {
+    foreignKey: 'aplicada_por',
+    as: 'aplicadoPor'
+  });
+
+  ExpedienteDocumento.hasMany(FirmaHistorial, {
+    foreignKey: 'documento_id',
+    as: 'historialFirmas'
+  });
+};
+
 export {
   sequelize,
   Usuario,
   Certificado,
   Document,
   Signature,
+  Expediente,
+  ExpedienteDocumento,
+  FirmaBatch,
+  UsuarioFirma,
+  FirmaHistorial,
   syncDatabase
 };

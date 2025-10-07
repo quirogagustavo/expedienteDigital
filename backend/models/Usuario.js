@@ -34,6 +34,15 @@ const Usuario = sequelize.define('Usuario', {
   password_hash: {
     type: DataTypes.STRING(255),
     allowNull: false
+  },
+  oficina_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'oficinas',
+      key: 'id'
+    },
+    comment: 'Oficina a la que pertenece el usuario para control de acceso'
   }
 }, {
   tableName: 'usuarios'

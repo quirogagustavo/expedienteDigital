@@ -15,6 +15,27 @@ import signatureRoutes from './routes/signatureRoutes.js';
 // import smartCertificateRoutes from './routes/smartCertificateRoutes.js'; // Comentado temporalmente
 // import internalCertificateRoutes from './routes/internalCertificateRoutes.js'; // Comentado temporalmente
 // import governmentCertificateRoutes from './routes/governmentCertificateRoutes.js'; // Comentado temporalmente
+
+// Importar rutas de expedientes
+import expedienteRoutes from './routes/expedientes.js';
+import firmaDocumentosRoutes from './routes/firmaDocumentos.js';
+
+// Importar rutas de workflow
+import oficinasRoutes from './routes/oficinas.js';
+import workflowRoutes from './routes/workflow.js';
+
+// Importar rutas de administración
+import adminRoutes from './routes/admin.js';
+
+// Importar rutas de debug (temporal)
+import debugRoutes from './routes/debug.js';
+
+// Importar rutas de gestión de firmas
+import firmasRoutes from './routes/firmas.js';
+
+// Importar rutas de gestión de certificados
+import certificadosRoutes from './routes/certificados.js';
+
 import { initializeDefaultData } from './models/databaseExtended.js';
 
 const app = express();
@@ -29,17 +50,26 @@ async function startServer() {
     await initializeDefaultData();
 
     app.use(cors());
-app.use(express.json());
+    app.use(express.json());
 
-// Rutas de autenticación
-app.post('/register', register);
+    // Servir archivos estáticos desde la carpeta uploads
+    app.use('/uploads', express.static('uploads'));
+
+    // Middleware de logging para todas las peticiones
+    app.use((req, res, next) => {
+      console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+      next();
+    });
+
+    // Rutas de autenticación
+    app.post('/register', register);
 app.post('/login', login);
 
 // Endpoint para obtener perfil del usuario
 app.get('/profile', authenticateToken, async (req, res) => {
   try {
     const usuario = await Usuario.findByPk(req.user.id, {
-      attributes: ['id', 'username', 'nombre_completo', 'email', 'rol_usuario']
+      attributes: ['id', 'username', 'nombre_completo', 'email', 'rol_usuario', 'oficina_id']
     });
 
     if (!usuario) {
@@ -58,6 +88,26 @@ app.use('/api', certificateRoutes);
 
 // Rutas para historial de firmas
 app.use('/api/signatures', signatureRoutes);
+
+// Rutas para expedientes digitales
+app.use('/api/expedientes', expedienteRoutes);
+app.use('/api/firma-documentos', firmaDocumentosRoutes);
+
+// Rutas para workflow
+app.use('/api/oficinas', oficinasRoutes);
+app.use('/api/workflow', workflowRoutes);
+
+// Rutas para administración
+app.use('/api/admin', adminRoutes);
+
+// Rutas para debug (temporal)
+app.use('/api/debug', debugRoutes);
+
+// Rutas para gestión de firmas de usuarios
+app.use('/api', firmasRoutes);
+
+// Rutas para gestión de certificados
+app.use('/api/certificates', certificadosRoutes);
 
 // Rutas para auto-detección inteligente de certificados
 // app.use('/api/certificates', smartCertificateRoutes); // Comentado temporalmente
@@ -92,7 +142,7 @@ app.post('/sign', authenticateToken, upload.single('document'), async (req, res)
   
   try {
     // Obtener información del tipo de documento y certificado solicitado
-    const { tipo_documento, certificate_type } = req.body;
+    const { tipo_documento, certificate_type, aplicar_firma_visual, posicion_firma } = req.body;
     
     // Validar tipo de documento
     if (!tipo_documento || !['oficial', 'no_oficial'].includes(tipo_documento)) {
@@ -182,6 +232,84 @@ app.post('/sign', authenticateToken, upload.single('document'), async (req, res)
     // Firmar con el certificado del usuario
     const signature = signWithPrivateKey(req.file.buffer, certificado.clave_privada_pem);
     
+    // Aplicar firma visual del usuario si está habilitada
+    let documentoConFirmaVisual = req.file.buffer;
+    let firmaVisualAplicada = false;
+    
+    if (aplicar_firma_visual === 'true') {
+      try {
+        const { UsuarioFirma } = await import('./models/index.js');
+        const { default: FirmaService } = await import('./services/FirmaService.js');
+        
+        // Obtener firma predeterminada del usuario
+        const firmaUsuario = await UsuarioFirma.findFirmaPredeterminada(usuario.id);
+        
+        if (firmaUsuario) {
+          console.log(`[FIRMA_VISUAL] Aplicando firma visual del usuario ${usuario.id}`);
+          
+          // Parsear posición de firma (puede venir como string JSON)
+          let posicion = {
+            pagina: 1,
+            x: 50,
+            y: 50,
+            ancho: 150,
+            alto: 50
+          };
+          
+          if (posicion_firma) {
+            try {
+              const posicionParsed = typeof posicion_firma === 'string' 
+                ? JSON.parse(posicion_firma) 
+                : posicion_firma;
+              posicion = { ...posicion, ...posicionParsed };
+            } catch (e) {
+              console.warn('[FIRMA_VISUAL] Error parseando posición, usando defaults:', e.message);
+            }
+          }
+          
+          // Aplicar firma visual al PDF
+          documentoConFirmaVisual = await FirmaService.aplicarFirmaAPDF(
+            req.file.buffer,
+            firmaUsuario.firma_imagen,
+            {
+              pagina: posicion.pagina || 1,
+              x: posicion.x || 50,
+              y: posicion.y || 50,
+              ancho: posicion.ancho || 150,
+              alto: posicion.alto || 50
+            }
+          );
+          
+          firmaVisualAplicada = true;
+          console.log(`[FIRMA_VISUAL] Firma visual aplicada exitosamente en página ${posicion.pagina}`);
+          
+          // Registrar en historial de firmas
+          const { FirmaHistorial } = await import('./models/index.js');
+          await FirmaHistorial.create({
+            usuario_firma_id: firmaUsuario.id,
+            documento_nombre: req.file.originalname,
+            hash_documento: hashDocumento,
+            timestamp_aplicacion: new Date(),
+            posicion_aplicada: JSON.stringify(posicion),
+            metadata: JSON.stringify({
+              tamaño_documento: req.file.size,
+              tipo_documento: tipo_documento,
+              usuario_id: usuario.id,
+              certificado_id: certificado.id
+            })
+          });
+          
+        } else {
+          console.log(`[FIRMA_VISUAL] Usuario ${usuario.id} no tiene firma configurada, omitiendo firma visual`);
+        }
+        
+      } catch (error) {
+        console.error('[FIRMA_VISUAL] Error aplicando firma visual:', error);
+        // No fallar la firma completa si hay error en firma visual
+        // El documento seguirá teniendo firma digital válida
+      }
+    }
+    
     // Calcular hash del documento para integridad
     const crypto = require('crypto');
     const hashDocumento = crypto.createHash('sha256').update(req.file.buffer).digest('hex');
@@ -226,10 +354,10 @@ app.post('/sign', authenticateToken, upload.single('document'), async (req, res)
     console.log(`[FIRMA_COMPLETA_AUDIT]`, JSON.stringify(auditLog));
     
     res.json({
-      message: `Documento firmado digitalmente con certificado ${certificate_type === 'government' ? 'gubernamental' : 'interno'}`,
+      message: `Documento firmado digitalmente con certificado ${certificate_type === 'government' ? 'gubernamental' : 'interno'}${firmaVisualAplicada ? ' y firma visual aplicada' : ''}`,
       filename: req.file.originalname,
       size: req.file.size,
-      fileBase64: req.file.buffer.toString('base64'),
+      fileBase64: documentoConFirmaVisual.toString('base64'),
       signature,
       publicKeyPem: certificado.certificado_pem,
       // Información del documento
@@ -238,7 +366,8 @@ app.post('/sign', authenticateToken, upload.single('document'), async (req, res)
         certificate_type,
         estado_firma: certificate_type === 'government' ? 'firmado_gubernamental' : 'firmado_interno',
         validez_legal: certificate_type === 'government' ? 'COMPLETA' : 'INTERNA',
-        hash_documento: hashDocumento
+        hash_documento: hashDocumento,
+        firma_visual_aplicada: firmaVisualAplicada
       },
       // Información de la firma registrada
       firma: {
@@ -295,6 +424,7 @@ app.get('/', (req, res) => {
   res.send('API de Firma Digital funcionando');
 });
 
+    // Iniciar el servidor
     app.listen(PORT, () => {
       console.log(`Servidor backend escuchando en http://localhost:${PORT}`);
     });
