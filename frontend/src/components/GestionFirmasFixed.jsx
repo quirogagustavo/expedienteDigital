@@ -12,7 +12,7 @@ import {
   Key,
   Calendar
 } from 'lucide-react';
-import axios from 'axios';
+import api from '../utils/api.js';
 
 const GestionFirmasFixed = ({ isOpen, onClose, usuario }) => {
   const [firmaManuscrita, setFirmaManuscrita] = useState(null);
@@ -42,11 +42,7 @@ const GestionFirmasFixed = ({ isOpen, onClose, usuario }) => {
   const cargarFirmasUsuario = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      const response = await axios.get('http://localhost:4000/api/usuarios/mi-firma', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/usuarios/mi-firma');
 
       if (response.data.tiene_firma) {
         setFirmaManuscrita(response.data.firma);
@@ -54,9 +50,7 @@ const GestionFirmasFixed = ({ isOpen, onClose, usuario }) => {
 
       // Verificar si tiene firma digital generada automáticamente
       try {
-        const digitalResponse = await axios.get('http://localhost:4000/api/usuarios/mi-firma-digital', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const digitalResponse = await api.get('/usuarios/mi-firma-digital');
         setFirmaDigital(digitalResponse.data.firma);
       } catch (err) {
         // No tiene firma digital generada
@@ -73,10 +67,7 @@ const GestionFirmasFixed = ({ isOpen, onClose, usuario }) => {
 
   const cargarCertificados = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:4000/api/usuarios/mis-certificados', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/usuarios/mis-certificados');
       setCertificados(response.data.certificados || []);
     } catch (error) {
       console.error('Error cargando certificados:', error);
@@ -142,14 +133,12 @@ const GestionFirmasFixed = ({ isOpen, onClose, usuario }) => {
       formData.append('firma', previsualizacion.file);
       formData.append('nombre_firma', `Firma ${usuario.nombre_completo}`);
 
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        'http://localhost:4000/api/usuarios/mi-firma',
+      const response = await api.post(
+        '/usuarios/mi-firma',
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`
+            'Content-Type': 'multipart/form-data'
           }
         }
       );
@@ -169,16 +158,11 @@ const GestionFirmasFixed = ({ isOpen, onClose, usuario }) => {
   const generarFirmaDigital = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      const response = await axios.post(
-        'http://localhost:4000/api/usuarios/generar-firma-digital',
+      const response = await api.post(
+        '/usuarios/generar-firma-digital',
         {
           texto: usuario.nombre_completo,
           estilo: 'elegante'
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` }
         }
       );
 
@@ -232,17 +216,15 @@ const GestionFirmasFixed = ({ isOpen, onClose, usuario }) => {
     try {
       setLoading(true);
       const formData = new FormData();
-      formData.append('certificado', certFile);
+      formData.append('certificate', certFile);
       formData.append('password', certPassword);
 
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        'http://localhost:4000/api/usuarios/subir-certificado',
+      const response = await api.post(
+        '/certificates/import-p12',
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`
+            'Content-Type': 'multipart/form-data'
           }
         }
       );
@@ -266,10 +248,7 @@ const GestionFirmasFixed = ({ isOpen, onClose, usuario }) => {
 
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:4000/api/usuarios/certificados/${certId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`/usuarios/certificados/${certId}`);
       
       setSuccess('Certificado eliminado exitosamente');
       cargarCertificados();
@@ -694,7 +673,7 @@ const GestionFirmasFixed = ({ isOpen, onClose, usuario }) => {
                         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                           <span><strong>Emisor:</strong> {cert.emisor}</span>
                           <span><strong>Vence:</strong> {new Date(cert.fecha_expiracion).toLocaleDateString()}</span>
-                          <span><strong>Días restantes:</strong> {cert.dias_hasta_vencimiento}</span>
+                          <span><strong>Días restantes:</strong> {cert.diasParaVencer || 'Calculando...'}</span>
                         </div>
                       </div>
                     </div>

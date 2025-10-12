@@ -79,6 +79,14 @@ router.get('/my-certificates', authenticateToken, async (req, res) => {
       else if (diasParaVencer <= 30) estado = 'por_vencer';
       else if (!cert.activo) estado = 'inactivo';
 
+      // Log para debuggear el estado calculado
+      console.log('ESTADO CERTIFICADO (internal):', {
+        certificado: cert.nombre_certificado,
+        diasParaVencer: diasParaVencer,
+        estado: estado,
+        activo: cert.activo
+      });
+
       return {
         ...cert.toJSON(),
         diasParaVencer,

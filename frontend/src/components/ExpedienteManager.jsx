@@ -1,15 +1,28 @@
-//import React, { useState, useEffect } from 'react';
-
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
-// Para pdfjs-dist v5.x, usar el worker legacy
 import { FileText, Plus, Eye, Edit, Trash2, Download, FileSignature, CheckCircle, Clock, AlertCircle, FolderOpen, Settings, User, Send } from 'lucide-react';
 import GestionFirmas from './GestionFirmasFixed';
+import TokenFirmaSimulator from './TokenFirmaSimulator';
 // import DigitalSignatureWithToken from './DigitalSignatureWithToken';
 
 const ExpedienteManager = () => {
-  // Función para firmar documento
-  // Selector de método de firma
+
+  // TODOS LOS useState VAN AL INICIO PARA EVITAR ERRORES DE REFERENCIA
+  const [usuario, setUsuario] = useState(null);
+  const [certificados, setCertificados] = useState([]);
+  const [showGestionFirmas, setShowGestionFirmas] = useState(false);
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [newDocument, setNewDocument] = useState({ documento_nombre: '', documento_tipo: '', archivo: null });
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showExpedienteModal, setShowExpedienteModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState(null);
+  const [expedientes, setExpedientes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [filter, setFilter] = useState({ estado: '', prioridad: '' });
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
+  const [selectedExpediente, setSelectedExpediente] = useState(null);
+  const [newExpediente, setNewExpediente] = useState({ titulo: '', descripcion: '', reparticion: '', prioridad: 'normal' });
   const [showMetodoFirmaModal, setShowMetodoFirmaModal] = useState(false);
   const [docIdAFirmar, setDocIdAFirmar] = useState(null);
   const [metodoFirma, setMetodoFirma] = useState('interno');
@@ -19,389 +32,265 @@ const ExpedienteManager = () => {
   const [showEnvioModal, setShowEnvioModal] = useState(false);
   const [expedienteAEnviar, setExpedienteAEnviar] = useState(null);
   const [oficinasDisponibles, setOficinasDisponibles] = useState([]);
-  const [envioData, setEnvioData] = useState({
-    oficina_destino_id: '',
-    comentario: ''
-  });
+  const [envioData, setEnvioData] = useState({ oficina_destino_id: '', comentario: '' });
 
-  // Debug: Rastrear cambios de estado
-  React.useEffect(() => {
-    console.log('🔄 showEnvioModal cambió a:', showEnvioModal);
-  }, [showEnvioModal]);
-  
-  React.useEffect(() => {
-    console.log('🔄 expedienteAEnviar cambió a:', expedienteAEnviar);
-  }, [expedienteAEnviar]);
-
-  // Lógica para firmar documento según método
-  const handleFirmarDocumento = (docId) => {
-    setDocIdAFirmar(docId);
-    setShowMetodoFirmaModal(true);
-  };
-
-  const confirmarFirmaDocumento = async () => {
-    if (!selectedExpediente || !docIdAFirmar) return;
+  // Cargar detalles de un expediente por id
+  const loadExpedienteDetails = async (expedienteId) => {
     try {
-      let response;
-      if (metodoFirma === 'interno') {
-        response = await api.post(`/api/expedientes/${selectedExpediente.id}/documentos/${docIdAFirmar}/firmar`, { metodo: 'interno' }, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
-        alert(response.data?.message || 'Documento firmado exitosamente');
-        loadExpedienteDetails(selectedExpediente.id);
-      } else if (metodoFirma === 'certificado') {
-        if (!certSeleccionado) {
-          alert('Selecciona un certificado digital propio');
-          return;
-        }
-        response = await api.post(`/api/expedientes/${selectedExpediente.id}/documentos/${docIdAFirmar}/firmar`, { metodo: 'certificado', certificadoId: certSeleccionado }, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
-        alert(response.data?.message || 'Documento firmado exitosamente');
-        loadExpedienteDetails(selectedExpediente.id);
-      } else if (metodoFirma === 'token') {
-        // Buscar el documento a firmar
-        const doc = selectedExpediente.documentos?.find(d => d.id === docIdAFirmar);
-        if (!doc) {
-          alert('No se encontró el documento para firmar con token');
-          return;
-        }
-        setDocParaToken(doc);
-        setShowTokenFirmaModal(true);
-        setShowMetodoFirmaModal(false);
-        return;
+      console.log('[DEBUG] Llamando a /expedientes/' + expedienteId);
+      const response = await api.get(`/expedientes/${expedienteId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      console.log('[DEBUG] Respuesta de backend:', response.data);
+      const data = response.data || {};
+      // Si la respuesta es { expediente: { ... } }, acceder correctamente
+      const expediente = data.expediente || {};
+      console.log('[DEBUG] Expediente extraído:', expediente);
+      if (!Array.isArray(expediente.documentos)) {
+        console.log('[DEBUG] Normalizando documentos a array vacío');
+        expediente.documentos = [];
       }
+      setSelectedExpediente(expediente);
     } catch (error) {
-      let msg = 'Error al firmar documento.';
-      if (error.response?.data?.error) {
-        msg += '\n' + error.response.data.error;
-      }
-      if (error.response?.data?.details) {
-        msg += '\nDetalles: ' + error.response.data.details;
-      }
-      alert(msg);
-    } finally {
-      setShowMetodoFirmaModal(false);
-      setDocIdAFirmar(null);
-      setMetodoFirma('interno');
-      setCertSeleccionado(null);
+      console.error('[ERROR] al cargar detalles del expediente:', error);
+      alert('Error al cargar detalles del expediente');
     }
   };
+
+  // Función para actualizar el expediente seleccionado después de cambios
+  const refreshSelectedExpediente = async () => {
+    if (selectedExpediente?.id) {
+      await loadExpedienteDetails(selectedExpediente.id);
+    }
+  };
+
+  // Función para mostrar información detallada de la firma
+  const mostrarInfoFirma = (doc) => {
+    if (doc.estado_firma === 'firmado') {
+      return (
+        <div className="text-sm">
+          <div className="flex items-center gap-1 mb-1">
+            <CheckCircle className="w-4 h-4 text-green-600" />
+            <span className="text-green-600 font-semibold">Firmado Digitalmente</span>
+          </div>
+          {doc.firmante && (
+            <div className="text-xs text-gray-600">
+              👤 Por: <span className="font-medium">{doc.firmante.nombre_completo}</span>
+            </div>
+          )}
+          {doc.fecha_firma && (
+            <div className="text-xs text-gray-600">
+              📅 El: <span className="font-medium">{new Date(doc.fecha_firma).toLocaleString('es-AR')}</span>
+            </div>
+          )}
+          {doc.metadatos?.metodo && (
+            <div className="text-xs text-gray-600">
+              🔐 Método: <span className="font-medium">{doc.metadatos.metodo === 'token' ? 'Token Digital' : 'Certificado Interno'}</span>
+            </div>
+          )}
+          {doc.archivo_firmado_path && (
+            <div className="text-xs text-blue-600">
+              � Firma digital criptográfica embedida
+            </div>
+          )}
+          {doc.archivo_firmado_path && (
+            <div className="text-xs text-green-600">
+              �📄 Incluye firma visual en el documento
+            </div>
+          )}
+        </div>
+      );
+    } else if (doc.estado_firma === 'pendiente') {
+      return (
+        <div className="flex items-center gap-1">
+          <Clock className="w-4 h-4 text-yellow-600" />
+          <span className="text-yellow-600 font-semibold">Pendiente de firma</span>
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex items-center gap-1">
+          <AlertCircle className="w-4 h-4 text-red-600" />
+          <span className="text-red-600 font-semibold">Rechazado</span>
+        </div>
+      );
+    }
+  };
+
+  // Eliminar documento
+  const eliminarDocumento = async (docId, docNombre) => {
+    if (!selectedExpediente) return;
+    if (!window.confirm(`¿Seguro que deseas eliminar el documento "${docNombre}"?`)) return;
+    try {
+      await api.delete(`/expedientes/${selectedExpediente.id}/documentos/${docId}`);
+      alert('Documento eliminado correctamente');
+      fetchExpedientes();
+    } catch (error) {
+      alert('Error al eliminar documento');
+    }
+  };
+
+  // Verificar firma digital de un documento
+  const verificarFirmaDigital = async (docId) => {
+    try {
+      const response = await api.get(`/expedientes/${selectedExpediente.id}/documentos/${docId}/verificar-firma`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      
+      const { verificacion, firmante, fecha_firma, metadatos } = response.data;
+      
+      let mensaje = '🔐 VERIFICACIÓN DE FIRMA DIGITAL\n\n';
+      mensaje += `Estado: ${verificacion.isValid ? '✅ VÁLIDA' : '❌ INVÁLIDA'}\n`;
+      mensaje += `Firmante: ${firmante?.nombre_completo || 'No disponible'}\n`;
+      mensaje += `Fecha: ${fecha_firma ? new Date(fecha_firma).toLocaleString('es-AR') : 'No disponible'}\n`;
+      
+      if (metadatos?.metodo) {
+        mensaje += `Método: ${metadatos.metodo === 'token' ? 'Token Digital' : 'Certificado Interno'}\n`;
+      }
+      
+      if (verificacion.signatures && verificacion.signatures.length > 0) {
+        mensaje += '\n📋 DETALLES DE LA FIRMA:\n';
+        verificacion.signatures.forEach((sig, index) => {
+          mensaje += `• Firmante: ${sig.signer}\n`;
+          mensaje += `• Fecha de firma: ${new Date(sig.signDate).toLocaleString('es-AR')}\n`;
+          mensaje += `• Razón: ${sig.reason}\n`;
+          mensaje += `• Válida ahora: ${sig.isValidNow ? 'Sí' : 'No'}\n`;
+        });
+      }
+      
+      alert(mensaje);
+      
+    } catch (error) {
+      console.error('Error verificando firma digital:', error);
+      alert('Error al verificar la firma digital: ' + (error.response?.data?.error || 'Error desconocido'));
+    }
+  };
+
+  // Mostrar PDF unificado en un modal
+  const mostrarPDFUnificado = async (expedienteId) => {
+    try {
+      // Mostrar un mensaje de carga
+      alert('Generando vista previa del PDF unificado, por favor espere...');
+      
+      // Configurar un objeto para la previsualización
+      const pdfPreviewData = {
+        id: `unificado_${expedienteId}`,
+        documento_nombre: `Expediente ${expedienteId} Completo`,
+        ruta_activa: `api/expedientes/${expedienteId}/merged-pdf`,
+        cache_token: Date.now() // Para evitar caché
+      };
+      
+      // Usar el modal de previsualización existente
+      setPreviewDoc(pdfPreviewData);
+      setShowPreviewModal(true);
+      
+      console.log(`Vista previa del PDF unificado del expediente ${expedienteId} generada`);
+    } catch (error) {
+      console.error('Error al mostrar PDF unificado:', error);
+      alert(`Error al mostrar el PDF unificado: ${error.message}`);
+    }
+  };
+
+  // Enviar expediente
+  const enviarExpediente = async () => {
+    if (!expedienteAEnviar || !envioData.oficina_destino_id) {
+      alert('Selecciona la oficina destino');
+      return;
+    }
+    try {
+      await api.post(`/expedientes/${expedienteAEnviar.id}/enviar`, envioData);
+      alert('Expediente enviado correctamente');
+      setShowEnvioModal(false);
+      setEnvioData({ oficina_destino_id: '', comentario: '' });
+      fetchExpedientes();
+    } catch (error) {
+      alert('Error al enviar expediente');
+    }
+  };
+
+  // Función para cargar expedientes desde la API
+  const fetchExpedientes = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (filter.estado) params.append('estado', filter.estado);
+      if (filter.prioridad) params.append('prioridad', filter.prioridad);
+      params.append('page', pagination.page);
+      params.append('pageSize', pagination.pageSize);
+      if (usuario?.oficina_id) params.append('oficina_id', usuario.oficina_id);
+      const response = await api.get(`/expedientes?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      // Normalizar expedientes para asegurar que documentos siempre sea un array
+      const expedientesRaw = response.data?.expedientes || [];
+      const expedientesNorm = expedientesRaw.map(exp => ({
+        ...exp,
+        documentos: Array.isArray(exp.documentos) ? exp.documentos : []
+      }));
+      setExpedientes(expedientesNorm);
+    } catch (error) {
+      setExpedientes([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cargar expedientes cuando cambian filtros, paginación o usuario
+  useEffect(() => {
+    if (usuario?.oficina_id) {
+      fetchExpedientes();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, pagination, usuario]);
+
+  // Cargar usuario simulado si no está definido
+  useEffect(() => {
+    // Simulación: obtener usuario de localStorage o API si es necesario
+    const userStr = localStorage.getItem('usuario');
+    if (userStr) {
+      setUsuario(JSON.parse(userStr));
+    } else {
+      // Usuario simulado por defecto
+      setUsuario({ id: 1, nombre_completo: 'Usuario', email: 'test@test.com', oficina_id: 1 });
+    }
+  }, []);
+
+  // Cargar certificados del usuario
+  const cargarCertificados = async () => {
+    try {
+      // Usar ruta pública para desarrollo
+      const response = await fetch('/api/usuarios/certificados-publicos');
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Certificados cargados (público):', data);
+        setCertificados(data.certificados || []);
+      } else {
+        console.error('Error al cargar certificados:', response.status);
+      }
+    } catch (error) {
+      console.error('Error al cargar certificados:', error);
+    }
+  };
+
+  // Cargar certificados cuando el componente se monta
+  useEffect(() => {
+    cargarCertificados();
+  }, []);
+
+  // (Eliminado bloque duplicado de hooks y funciones)
+  // El resto del código del componente continúa normalmente
 
   const abrirModalEnvio = async (expediente) => {
     try {
       console.log('🚀 ABRIENDO MODAL ENVÍO - Expediente:', expediente.id);
       console.log('Debug - Usuario completo:', usuario);
       console.log('Debug - Usuario oficina_id:', usuario?.oficina_id);
-      
-      if (!usuario || !usuario.oficina_id) {
-        alert('Error: Usuario sin oficina asignada. Contacte al administrador.');
-        return;
-      }
-
-      // NUEVA VALIDACIÓN: Cargar detalles completos del expediente antes de validar
-      console.log('� CARGANDO DETALLES COMPLETOS DEL EXPEDIENTE PARA VALIDACIÓN');
-      let expedienteCompleto;
-      try {
-        const response = await api.get(`/api/expedientes/${expediente.id}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
-        expedienteCompleto = response.data.expediente;
-        console.log('✅ Expediente completo cargado:', expedienteCompleto);
-      } catch (error) {
-        console.error('❌ Error cargando expediente completo:', error);
-        alert('Error cargando los detalles del expediente');
-        return;
-      }
-
-      // Verificar que todos los documentos estén firmados usando los datos completos
-      console.log('🔍 VALIDANDO DOCUMENTOS EN FRONTEND');
-      console.log('Documentos del expediente completo:', expedienteCompleto.documentos);
-      
-      if (expedienteCompleto.documentos) {
-        expedienteCompleto.documentos.forEach(doc => {
-          console.log(`📄 Documento: ${doc.documento_nombre}, Estado: ${doc.estado_firma}`);
-        });
-      }
-      
-      const documentosPendientes = expedienteCompleto.documentos?.filter(doc => doc.estado_firma === 'pendiente') || [];
-      console.log('Documentos pendientes encontrados:', documentosPendientes.length, documentosPendientes);
-      
-      if (documentosPendientes.length > 0) {
-        console.log('❌ BLOQUEANDO ENVÍO EN FRONTEND - Documentos pendientes:', documentosPendientes.length);
-        alert(`❌ No se puede enviar el expediente\n\n📋 El expediente contiene ${documentosPendientes.length} documento${documentosPendientes.length > 1 ? 's' : ''} pendiente${documentosPendientes.length > 1 ? 's' : ''} de firma:\n\n${documentosPendientes.map(doc => `📄 ${doc.documento_nombre}`).join('\n')}\n\n⚠️ Debe firmar todos los documentos antes de poder enviar el expediente a otra oficina.`);
-        return;
-      }
-      
-      console.log('✅ VALIDACIÓN FRONTEND APROBADA - Todos los documentos están firmados');
-      
-      // Cargar oficinas disponibles (excluyendo la actual del usuario)
-      console.log('🌐 Llamando API:', `/api/oficinas/disponibles/${usuario.oficina_id}`);
-      const response = await api.get(`/api/oficinas/disponibles/${usuario.oficina_id}`);
-      console.log('📊 Respuesta de oficinas:', response.data);
-      
-      // Establecer todo junto al final
-      setOficinasDisponibles(response.data);
-      setExpedienteAEnviar(expedienteCompleto);
-      console.log('📝 Expediente completo a enviar establecido:', expedienteCompleto.id);
-      console.log('✅ Abriendo modal...');
+      setExpedienteAEnviar(expediente);
       setShowEnvioModal(true);
-      console.log('🎯 Estado después de setShowEnvioModal:', {
-        showEnvioModal: true,
-        expedienteAEnviar,
-        oficinasDisponibles: response.data.length
-      });
     } catch (error) {
-      console.error('Error completo:', error);
-      alert('Error cargando oficinas: ' + (error.response?.data?.error || error.message));
+      alert('Error al abrir el modal de envío');
     }
   };
-
-  const enviarExpediente = async () => {
-    if (!envioData.oficina_destino_id) {
-      alert('Debe seleccionar una oficina destino');
-      return;
-    }
-    try {
-      const response = await api.post(`/api/expedientes/${expedienteAEnviar.id}/enviar`, envioData, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      
-      // Mensaje de éxito
-      alert('✅ ' + (response.data?.message || 'Expediente enviado exitosamente a la oficina seleccionada'));
-      loadExpedientes();
-      setShowEnvioModal(false);
-      setEnvioData({ oficina_destino_id: '', comentario: '' });
-    } catch (error) {
-      console.error('Error en envío:', error);
-      
-      // Manejar diferentes tipos de errores
-      if (error.response?.status === 400) {
-        // Error de validación (documentos pendientes)
-        const mensaje = error.response?.data?.message || error.response?.data?.error;
-        alert('❌ No se pudo enviar el expediente:\n\n' + mensaje);
-      } else {
-        // Otros errores (servidor, red, etc.)
-        const mensaje = error.response?.data?.error || error.message;
-        alert('❌ Error enviando expediente:\n' + mensaje);
-      }
-      
-      // No cerrar el modal si hay error para que el usuario pueda corregir
-    }
-  };
-
-  // Función para eliminar documento
-  const eliminarDocumento = async (docId, docNombre) => {
-    if (!confirm(`¿Está seguro de que desea eliminar el documento "${docNombre}"?\n\nEsta acción no se puede deshacer.`)) {
-      return;
-    }
-    
-    try {
-      const response = await api.delete(`/api/expedientes/${selectedExpediente.id}/documentos/${docId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      alert(response.data?.message || 'Documento eliminado exitosamente');
-      loadExpedienteDetails(selectedExpediente.id);
-    } catch (error) {
-      alert('Error eliminando documento: ' + (error.response?.data?.error || error.message));
-    }
-  };
-      {/* Modal para firma con token */}
-      {/*
-      {showTokenFirmaModal && docParaToken && (
-        <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999}}>
-          <div style={{background: 'white', padding: '2rem', borderRadius: '1rem', boxShadow: '0 8px 32px rgba(0,0,0,0.3)', minWidth: 400, maxWidth: 600, width: '100%', position: 'relative'}}>
-            <button style={{position: 'absolute', top: 16, right: 16, background: '#ef4444', color: 'white', border: 'none', borderRadius: '0.5rem', padding: '0.5rem 1rem', fontWeight: 600, zIndex: 10}} onClick={() => { setShowTokenFirmaModal(false); setDocParaToken(null); }}>Cerrar</button>
-            <h2 style={{fontSize: '1.15rem', fontWeight: 'bold', marginBottom: '1rem'}}>Firma con Token Digital</h2>
-            {/* <DigitalSignatureWithToken ... /> */}
-          //</div>
-        //</div>
-        //)}
-      //}
-  // Estado para previsualización de documento
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [previewDoc, setPreviewDoc] = useState(null);
-  // Estado para previsualización del expediente completo
-  const [showExpedienteModal, setShowExpedienteModal] = useState(false);
-  // Estado para gestión de firmas
-  const [showGestionFirmas, setShowGestionFirmas] = useState(false);
-  const [usuario, setUsuario] = useState(null);
-    // Estados principales
-    const [expedientes, setExpedientes] = useState([]);
-    const [selectedExpediente, setSelectedExpediente] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [showDocumentModal, setShowDocumentModal] = useState(false);
-    // Estados para filtros y paginación
-    const [filter, setFilter] = useState({ estado: '', prioridad: '' });
-    const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 });
-    // Estados para crear expediente
-    const [newExpediente, setNewExpediente] = useState({
-      titulo: '',
-      descripcion: '',
-      reparticion: '',
-      prioridad: 'normal',
-      metadatos: {}
-    });
-    // Estados para agregar documento
-    const [newDocument, setNewDocument] = useState({
-      documento_nombre: '',
-      documento_tipo: 'documento',
-      numero_foja: '',
-      archivo: null
-    });
-    const [documentFile, setDocumentFile] = useState(null);
-
-    useEffect(() => {
-      loadExpedientes();
-    }, [filter, pagination.page]);
-
-    useEffect(() => {
-      loadUsuarioInfo();
-    }, []); // Solo cargar una vez al montar el componente
-
-    const loadUsuarioInfo = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        console.log('ExpedienteManager - Token obtenido:', token ? 'Token existe' : 'No hay token');
-        if (!token) return;
-        
-        // Decodificar token para obtener información del usuario
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        console.log('ExpedienteManager - Payload del token:', payload);
-        
-        // Usar la API para obtener el perfil completo del usuario
-        const response = await api.get('/profile', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        const usuarioData = {
-          id: response.data.user.id,
-          nombre_completo: response.data.user.nombre_completo,
-          email: response.data.user.email,
-          oficina_id: response.data.user.oficina_id
-        };
-        console.log('ExpedienteManager - Usuario establecido:', usuarioData);
-        setUsuario(usuarioData);
-      } catch (error) {
-        console.error('Error cargando información del usuario:', error);
-        // Fallback al payload del token si la API falla
-        try {
-          const token = localStorage.getItem('token');
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          setUsuario({
-            id: payload.id,
-            nombre_completo: payload.nombre_completo || payload.username,
-            email: payload.email || 'email@ejemplo.com',
-            oficina_id: payload.oficina_id
-          });
-        } catch (fallbackError) {
-          console.error('Error en fallback:', fallbackError);
-        }
-      }
-    };
-
-    const loadExpedientes = async () => {
-      setLoading(true);
-      try {
-        const params = {
-          page: pagination.page,
-          limit: pagination.limit,
-          ...filter
-        };
-        const response = await api.get('/api/expedientes', {
-          params,
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
-        setExpedientes(response.data.expedientes || []);
-        setPagination(prev => ({ 
-          ...prev, 
-          total: response.data.pagination?.total || 0, 
-          pages: response.data.pagination?.pages || 1 
-        }));
-      } catch (error) {
-        alert('Error al cargar expedientes: ' + (error.response?.data?.error || error.message));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const createExpediente = async (e) => {
-      e.preventDefault();
-      try {
-        const response = await api.post('/api/expedientes', newExpediente, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
-        setExpedientes([response.data.expediente, ...expedientes]);
-        setShowCreateModal(false);
-        setNewExpediente({ titulo: '', descripcion: '', reparticion: '', prioridad: 'normal', metadatos: {} });
-        alert('Expediente creado exitosamente');
-        loadExpedientes();
-      } catch (error) {
-        alert('Error al crear expediente: ' + (error.response?.data?.error || error.message));
-      }
-    };
-
-    const loadExpedienteDetails = async (expedienteId) => {
-      try {
-        const response = await api.get(`/api/expedientes/${expedienteId}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
-        setSelectedExpediente(response.data.expediente);
-      } catch (error) {
-        alert('Error al cargar detalles del expediente');
-      }
-    };
-
-    const addDocument = async (e) => {
-      e.preventDefault();
-      if (!selectedExpediente) return;
-      try {
-        const formData = new FormData();
-        formData.append('documento_nombre', newDocument.documento_nombre);
-        formData.append('documento_tipo', newDocument.documento_tipo);
-        formData.append('numero_foja', newDocument.numero_foja);
-        if (newDocument.archivo) {
-          formData.append('archivo', newDocument.archivo);
-        }
-        const response = await api.post(`/api/expedientes/${selectedExpediente.id}/documentos`, formData, {
-          headers: { 
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-        setShowDocumentModal(false);
-        setNewDocument({ documento_nombre: '', documento_tipo: 'documento', numero_foja: '', archivo: null });
-        loadExpedienteDetails(selectedExpediente.id);
-        alert(response.data?.message || 'Documento agregado exitosamente');
-      } catch (error) {
-        let msg = 'Error al agregar documento.';
-        if (error.response?.data?.error) {
-          msg += '\n' + error.response.data.error;
-        }
-        if (error.response?.data?.details) {
-          msg += '\nDetalles: ' + error.response.data.details;
-        }
-        alert(msg);
-      }
-    };
-
-    const getEstadoBadge = (estado) => {
-      const badges = {
-        borrador: { color: 'bg-gray-500', icon: Edit, text: 'Borrador' },
-        en_proceso: { color: 'bg-blue-500', icon: Clock, text: 'En Proceso' },
-        consolidado: { color: 'bg-green-500', icon: CheckCircle, text: 'Consolidado' },
-        cerrado: { color: 'bg-red-500', icon: AlertCircle, text: 'Cerrado' }
-      };
-      const badge = badges[estado] || badges.borrador;
-      const Icon = badge.icon;
-      return (
-        <span className={`inline-flex items-center px-2 py-1 text-xs font-medium text-white rounded-full ${badge.color}`}>
-          <Icon className="w-3 h-3 mr-1" />
-          {badge.text}
-        </span>
-      );
-    };
 
     const getPrioridadColor = (prioridad) => {
       const colors = {
@@ -413,10 +302,105 @@ const ExpedienteManager = () => {
       return colors[prioridad] || colors.normal;
     };
 
-  //console.log('showCreateModal:', showCreateModal);
+  // Función para obtener el badge del estado
+  const getEstadoBadge = (estado) => {
+    const badges = {
+      borrador: <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-sm">Borrador</span>,
+      en_proceso: <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">En Proceso</span>,
+      consolidado: <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm">Consolidado</span>,
+      cerrado: <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-sm">Cerrado</span>
+    };
+    return badges[estado] || <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-sm">{estado}</span>;
+  };
+
+  // Manejar firma de documento
+  const handleFirmarDocumento = (docId) => {
+    setDocIdAFirmar(docId);
+    setShowMetodoFirmaModal(true);
+  };
+
+  // Confirmar firma de documento
+  const confirmarFirmaDocumento = async () => {
+    if (!docIdAFirmar) return;
+    
+    try {
+      if (metodoFirma === 'token') {
+        // Buscar el documento para abrir el modal de token
+        const documento = selectedExpediente?.documentos?.find(doc => doc.id === docIdAFirmar);
+        setDocParaToken(documento);
+        setShowTokenFirmaModal(true);
+        setShowMetodoFirmaModal(false);
+        return;
+      }
+
+      // Para otros métodos de firma (interno o certificado)
+      const firmaData = {
+        metodo: metodoFirma,
+        certificado_id: metodoFirma === 'certificado' ? certSeleccionado : null
+      };
+
+      await api.post(`/expedientes/${selectedExpediente.id}/documentos/${docIdAFirmar}/firmar`, firmaData);
+
+      alert('Documento firmado correctamente');
+      setShowMetodoFirmaModal(false);
+      setDocIdAFirmar(null);
+      setMetodoFirma('interno');
+      setCertSeleccionado(null);
+      
+      // Actualizar tanto la lista como los detalles del expediente seleccionado
+      await fetchExpedientes();
+      await refreshSelectedExpediente();
+    } catch (error) {
+      console.error('Error al firmar documento:', error);
+      alert('Error al firmar documento');
+    }
+  };
+
+  // Crear expediente
+  const createExpediente = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.post('/expedientes', newExpediente);
+      alert('Expediente creado correctamente');
+      setShowCreateModal(false);
+      setNewExpediente({ titulo: '', descripcion: '', reparticion: '', prioridad: 'normal' });
+      fetchExpedientes();
+    } catch (error) {
+      alert('Error al crear expediente');
+    }
+  };
+
+  // Agregar documento
+  const addDocument = async (e) => {
+    e.preventDefault();
+    if (!selectedExpediente) return;
+    try {
+      const formData = new FormData();
+      formData.append('documento_nombre', newDocument.documento_nombre);
+      formData.append('documento_tipo', newDocument.documento_tipo);
+      formData.append('archivo', newDocument.archivo);
+      await api.post(`/expedientes/${selectedExpediente.id}/documentos`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      alert('Documento agregado correctamente');
+      setShowDocumentModal(false);
+      setNewDocument({ documento_nombre: '', documento_tipo: '', archivo: null });
+      fetchExpedientes();
+    } catch (error) {
+      alert('Error al agregar documento');
+    }
+  };
   return (
     <>
     <div className="p-6 max-w-7xl mx-auto" style={{ position: 'relative' }}>
+        {/* Debug overlay detector (solo visible si hay bloqueo de puntero accidental) */}
+        {false && (
+          <div style={{position:'fixed',inset:0,zIndex:20000,pointerEvents:'none'}}>
+            <div style={{position:'absolute',top:0,left:0,background:'rgba(255,0,0,0.15)',padding:4,fontSize:10,fontFamily:'monospace'}}>DEBUG OVERLAY ACTIVE</div>
+          </div>
+        )}
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900 flex items-center">
@@ -501,12 +485,12 @@ const ExpedienteManager = () => {
                   <li className="py-4 text-gray-500 text-center">No hay expedientes disponibles.</li>
                 ) : (
                   expedientes.map((exp) => (
-                    <li key={exp.id} className={`py-6 border-b border-gray-100 w-full max-w-5xl mx-auto ${exp.documentos?.some(doc => doc.estado_firma === 'pendiente') ? 'bg-orange-50' : ''}`}> 
+                    <li key={exp.id} className={`py-6 border-b border-gray-100 w-full max-w-5xl mx-auto ${(Array.isArray(exp.documentos) ? exp.documentos : []).some(doc => doc.estado_firma === 'pendiente') ? 'bg-orange-50' : ''}`}> 
                       <div className="flex items-center justify-between w-full min-w-0">
                         {/* Izquierda: Título y badges */}
                         <div className="flex items-center min-w-0 flex-1 gap-2">
-                          <span className={`font-extrabold text-xl md:text-2xl mr-2 truncate whitespace-nowrap min-w-0 ${exp.documentos?.some(doc => doc.estado_firma === 'pendiente') ? 'text-red-700' : 'text-blue-800'}`}> 
-                            <FolderOpen className={`w-6 h-6 inline-block mr-2 align-middle ${exp.documentos?.some(doc => doc.estado_firma === 'pendiente') ? 'text-red-500' : 'text-blue-400'}`} />
+                          <span className={`font-extrabold text-xl md:text-2xl mr-2 truncate whitespace-nowrap min-w-0 ${(Array.isArray(exp.documentos) ? exp.documentos : []).some(doc => doc.estado_firma === 'pendiente') ? 'text-red-700' : 'text-blue-800'}`}> 
+                            <FolderOpen className={`w-6 h-6 inline-block mr-2 align-middle ${(Array.isArray(exp.documentos) ? exp.documentos : []).some(doc => doc.estado_firma === 'pendiente') ? 'text-red-500' : 'text-blue-400'}`} />
                             {exp.titulo}
                           </span>
                           <div className="flex flex-nowrap items-center gap-2 min-w-0 overflow-hidden">
@@ -530,7 +514,24 @@ const ExpedienteManager = () => {
                             <Eye className="w-4 h-4" />
                             <span className="hidden sm:inline">Ver</span>
                           </button>
-                          <button className="text-green-600 hover:text-green-800 border border-green-200 rounded-lg px-1 py-1 flex items-center gap-1 transition text-xs" onClick={() => { setSelectedExpediente(exp); setShowDocumentModal(true); }}>
+                          <button 
+                            className={`border rounded-lg px-1 py-1 flex items-center gap-1 transition text-xs ${
+                              exp.estado === 'cerrado' 
+                                ? 'text-gray-400 border-gray-200 cursor-not-allowed opacity-60' 
+                                : 'text-green-600 border-green-200 hover:text-green-800 hover:border-green-400'
+                            }`} 
+                            disabled={exp.estado === 'cerrado'}
+                            onClick={() => { 
+                              if (exp.estado === 'cerrado') { 
+                                console.log('[DEBUG] Intento de agregar documento en expediente cerrado:', exp.id); 
+                                return; 
+                              }
+                              console.log('[DEBUG] Abriendo modal agregar documento para expediente', exp.id);
+                              setSelectedExpediente(exp); 
+                              setShowDocumentModal(true); 
+                            }}
+                            title={exp.estado === 'cerrado' ? 'Expediente cerrado: no se pueden agregar documentos' : 'Agregar documento al expediente'}
+                          >
                             <FileSignature className="w-4 h-4" />
                             <span className="hidden sm:inline">Agregar Doc.</span>
                           </button>
@@ -570,8 +571,12 @@ const ExpedienteManager = () => {
           {/* Detalles del Expediente Seleccionado */}
           <div>
             {selectedExpediente ? (
-              <div className="bg-white p-4 rounded-lg shadow">
-                <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+              (() => {
+                // Normalizar documentos para evitar errores de renderizado
+                const documentos = Array.isArray(selectedExpediente.documentos) ? selectedExpediente.documentos : [];
+                return (
+                  <div className="bg-white p-4 rounded-lg shadow">
+                    <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
                           <div>
                             <h2 className="text-2xl font-bold text-blue-800 mb-2 flex items-center gap-2">
@@ -587,12 +592,12 @@ const ExpedienteManager = () => {
                           </div>
                           <div className="flex flex-col gap-2 items-end">
                             <span className="text-xs text-gray-400">ID: {selectedExpediente.id}</span>
-                            <span className="text-xs text-gray-400">Documentos: {selectedExpediente.documentos?.length || 0}</span>
+                            <span className="text-xs text-gray-400">Documentos: {documentos.length}</span>
                             <button
-                              onClick={() => setShowExpedienteModal(true)}
+                              onClick={() => mostrarPDFUnificado(selectedExpediente.id)}
                               className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center gap-1"
                             >
-                              <Eye className="w-4 h-4" />
+                              <FileText className="w-4 h-4" />
                               Ver Expediente Completo
                             </button>
                           </div>
@@ -601,8 +606,8 @@ const ExpedienteManager = () => {
                           <h3 className="text-lg font-semibold text-gray-800 mb-2">Documentos</h3>
                           {/* Documentos asociados - tarjetas */}
                           <div className="grid grid-cols-1 gap-4 mt-2">
-                            {selectedExpediente.documentos && selectedExpediente.documentos.length > 0 ? (
-                              selectedExpediente.documentos.map((doc) => (
+                            {documentos.length > 0 ? (
+                              documentos.map((doc) => (
                                 <div key={doc.id} className="bg-gray-50 rounded-lg shadow p-4 flex flex-col md:flex-row md:items-center justify-between border border-gray-200">
                                   <div className="flex items-center gap-3">
                                     <FileText className="w-6 h-6 text-blue-500" />
@@ -610,16 +615,33 @@ const ExpedienteManager = () => {
                                       <div className="font-semibold text-lg text-gray-800">{doc.documento_nombre}</div>
                                       <div className="text-sm text-gray-500">Tipo: <span className="font-medium">{doc.documento_tipo}</span></div>
                                       <div className="text-sm text-gray-500">Foja: <span className="font-medium">{doc.numero_foja}</span></div>
-                                      <div className="text-sm text-gray-500">Estado: {doc.estado_firma === 'firmado' ? <span className="text-green-600 font-semibold">Firmado</span> : doc.estado_firma === 'pendiente' ? <span className="text-yellow-600 font-semibold">Pendiente</span> : <span className="text-red-600 font-semibold">Rechazado</span>}</div>
+                                      {mostrarInfoFirma(doc)}
                                     </div>
                                   </div>
                                   <div className="flex gap-2 mt-3 md:mt-0">
                                     <button
                                       className="bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 flex items-center gap-1 text-sm"
-                                      onClick={() => { setPreviewDoc(doc); setShowPreviewModal(true); }}
+                                      onClick={() => { 
+                                        const normalizado = {
+                                          ...doc,
+                                          ruta_activa: doc.ruta_activa || doc.archivo_firmado_path || doc.archivo_path,
+                                          cache_token: doc.cache_token || doc.hash_firma || Date.now()
+                                        };
+                                        console.log('[PREVIEW] Documento normalizado:', normalizado);
+                                        setPreviewDoc(normalizado); 
+                                        setShowPreviewModal(true); 
+                                      }}
                                     >
                                       <Eye className="w-4 h-4" />Ver
                                     </button>
+                                    {doc.estado_firma === 'firmado' && doc.archivo_firmado_path && (
+                                      <button
+                                        className="bg-purple-100 text-purple-700 px-3 py-1 rounded hover:bg-purple-200 flex items-center gap-1 text-sm"
+                                        onClick={() => verificarFirmaDigital(doc.id)}
+                                      >
+                                        🔐 Verificar
+                                      </button>
+                                    )}
                                     {doc.estado_firma === 'pendiente' && (
                                       <>
                                         <button className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 flex items-center gap-1 text-sm" onClick={() => handleFirmarDocumento(doc.id)}><FileSignature className="w-4 h-4" />Firmar</button>
@@ -637,6 +659,10 @@ const ExpedienteManager = () => {
         <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999}}>
           <div style={{background: 'white', padding: '2rem', borderRadius: '1rem', boxShadow: '0 8px 32px rgba(0,0,0,0.3)', minWidth: 350, maxWidth: 400, width: '100%'}}>
             <h2 style={{fontSize: '1.15rem', fontWeight: 'bold', marginBottom: '1rem'}}>Selecciona el método de firma</h2>
+            <div style={{marginBottom: 12, color: '#888', fontSize: 13}}>
+              <strong>DEBUG:</strong> método seleccionado: <span style={{color: '#059669'}}>{metodoFirma}</span><br/>
+              <strong>Certificados cargados:</strong> {certificados.length} (vigentes: {certificados.filter(cert => cert.estado === 'vigente').length})
+            </div>
             <div style={{marginBottom: '1rem'}}>
               <label style={{display: 'block', marginBottom: 8}}>
                 <input type="radio" name="metodoFirma" value="interno" checked={metodoFirma === 'interno'} onChange={() => setMetodoFirma('interno')} />
@@ -649,8 +675,8 @@ const ExpedienteManager = () => {
               {metodoFirma === 'certificado' && (
                 <select style={{width: '100%', marginTop: 8, marginBottom: 8, padding: 6, borderRadius: 6, border: '1px solid #ccc'}} value={certSeleccionado || ''} onChange={e => setCertSeleccionado(e.target.value)}>
                   <option value="">Selecciona un certificado</option>
-                  {(usuario?.certificados || []).map(cert => (
-                    <option key={cert.id} value={cert.id}>{cert.nombre || cert.issuer || cert.id}</option>
+                  {certificados.filter(cert => cert.estado === 'vigente').map(cert => (
+                    <option key={cert.id} value={cert.id}>{cert.nombre_certificado || cert.emisor || `Certificado ${cert.id}`}</option>
                   ))}
                 </select>
               )}
@@ -674,8 +700,10 @@ const ExpedienteManager = () => {
                             )}
                           </div>
                         </div>
-                </div>
-              </div>
+                    </div>
+                  </div>
+                );
+              })()
             ) : (
               <div className="bg-white p-4 rounded-lg shadow text-gray-500 text-center">
                 <p>Selecciona un expediente para ver los detalles.</p>
@@ -688,21 +716,104 @@ const ExpedienteManager = () => {
             <div style={{background: 'white', padding: '2rem', borderRadius: '1rem', boxShadow: '0 8px 32px rgba(0,0,0,0.3)', minWidth: 350, maxWidth: 800, width: '100%', maxHeight: '90vh', overflowY: 'auto', position: 'relative'}}>
               <button style={{position: 'absolute', top: 16, right: 16, background: '#ef4444', color: 'white', border: 'none', borderRadius: '0.5rem', padding: '0.5rem 1rem', fontWeight: 600, zIndex: 10}} onClick={() => setShowPreviewModal(false)}>Cerrar</button>
               <h2 style={{fontSize: '1.15rem', fontWeight: 'bold', marginBottom: '1rem'}}>Previsualización: {previewDoc.documento_nombre}</h2>
-              {/* Renderizar PDF o imagen */}
+              {(() => { try { console.log('[PREVIEW MODAL] Documento:', previewDoc); } catch(e){} })()}
+              {/* Renderizar PDF o imagen (priorizar archivo firmado) */}
               <div className="mb-3">
-                <div className="text-sm text-gray-600 mb-2">Ruta: {previewDoc.archivo_path || 'No disponible'}</div>
-                <a 
-                  href={`http://localhost:4000/${previewDoc.archivo_path}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="bg-blue-100 text-blue-700 px-3 py-1 rounded text-sm hover:bg-blue-200 mr-2"
-                >
-                  Abrir en Nueva Pestaña
-                </a>
+                <div className="text-sm text-gray-600 mb-2">
+                  Ruta activa: {previewDoc.ruta_activa || previewDoc.archivo_firmado_path || previewDoc.archivo_path || 'No disponible'}<br/>
+                  {previewDoc.archivo_firmado_path ? (
+                    <span className="text-green-600">(Firmado)</span>
+                  ) : (
+                    <span className="text-yellow-600">(Original)</span>
+                  )}
+                </div>
+                {(() => { try { console.log('[PREVIEW MODAL] Usando ruta para ver (ruta_activa):', previewDoc.ruta_activa || (previewDoc.archivo_firmado_path || previewDoc.archivo_path)); } catch(e){} })()}
+                {(() => {
+                const path = previewDoc.ruta_activa || previewDoc.archivo_firmado_path || previewDoc.archivo_path;
+                // Si la ruta comienza con api/, es una ruta de API que necesita autenticación - crear un manejador especial
+                if (path.startsWith('api/')) {
+                  return (
+                    <button
+                      onClick={async () => {
+                        try {
+                          const token = localStorage.getItem('token');
+                          const pdfUrl = `http://localhost:4000/${path}?v=${previewDoc.cache_token || Date.now()}`;
+                          
+                          // Descargar el PDF y abrirlo en nueva pestaña
+                          const response = await fetch(pdfUrl, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                          });
+                          
+                          if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                          
+                          const blob = await response.blob();
+                          const blobUrl = URL.createObjectURL(blob);
+                          
+                          window.open(blobUrl, '_blank');
+                        } catch (error) {
+                          console.error('Error abriendo PDF en nueva pestaña:', error);
+                          alert('Error al abrir PDF en nueva pestaña: ' + error.message);
+                        }
+                      }}
+                      className="bg-blue-100 text-blue-700 px-3 py-1 rounded text-sm hover:bg-blue-200 mr-2"
+                    >
+                      Abrir en Nueva Pestaña
+                    </button>
+                  );
+                } else {
+                  // Para rutas normales, mantener el enlace original
+                  return (
+                    <a 
+                      href={`http://localhost:4000/${path}?v=${previewDoc.cache_token || Date.now()}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="bg-blue-100 text-blue-700 px-3 py-1 rounded text-sm hover:bg-blue-200 mr-2"
+                    >
+                      Abrir en Nueva Pestaña
+                    </a>
+                  );
+                }
+              })()}
               </div>
-              {previewDoc.archivo_path && previewDoc.archivo_path.match(/\.pdf$/i) ? (
+              {(() => { try { console.log('[PREVIEW MODAL] Detectando tipo de archivo'); } catch(e){} })()}
+              {(previewDoc.ruta_activa || previewDoc.archivo_firmado_path || previewDoc.archivo_path) && 
+               ((previewDoc.ruta_activa || previewDoc.archivo_firmado_path || previewDoc.archivo_path).match(/\.pdf$/i) || 
+                (previewDoc.ruta_activa || previewDoc.archivo_firmado_path || previewDoc.archivo_path).startsWith('api/expedientes/')) ? (
                 <iframe 
-                  src={`http://localhost:4000/${previewDoc.archivo_path}`} 
+                  src={(() => {
+                    const path = previewDoc.ruta_activa || previewDoc.archivo_firmado_path || previewDoc.archivo_path;
+                    // Si la ruta comienza con api/, es una ruta de API que necesita autenticación
+                    if (path.startsWith('api/')) {
+                      const token = localStorage.getItem('token');
+                      // Crear un blob URL con el contenido del PDF
+                      const pdfUrl = `http://localhost:4000/${path}?v=${previewDoc.cache_token || Date.now()}`;
+                      
+                      // Para rutas de API, iniciar descarga en segundo plano y mostrar el PDF
+                      (async () => {
+                        try {
+                          const response = await fetch(pdfUrl, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                          });
+                          if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                          
+                          const blob = await response.blob();
+                          const blobUrl = URL.createObjectURL(blob);
+                          
+                          // Actualizar el src del iframe
+                          document.getElementById('pdf-preview-iframe').src = blobUrl;
+                        } catch (error) {
+                          console.error('Error cargando PDF de API:', error);
+                        }
+                      })();
+                      
+                      // Retornar URL temporal mientras se carga
+                      return 'about:blank';
+                    } else {
+                      // Para rutas normales, usar la URL directa
+                      return `http://localhost:4000/${path}?v=${previewDoc.cache_token || Date.now()}`;
+                    }
+                  })()} 
+                  id="pdf-preview-iframe"
                   title="PDF Preview" 
                   style={{width: '100%', height: '70vh', border: '1px solid #ccc', borderRadius: '0.5rem'}}
                   onError={(e) => {
@@ -711,9 +822,9 @@ const ExpedienteManager = () => {
                     e.target.nextSibling.style.display = 'block';
                   }}
                 />
-              ) : previewDoc.archivo_path && previewDoc.archivo_path.match(/\.(png|jpg|jpeg)$/i) ? (
+              ) : (previewDoc.ruta_activa || previewDoc.archivo_firmado_path || previewDoc.archivo_path) && (previewDoc.ruta_activa || previewDoc.archivo_firmado_path || previewDoc.archivo_path).match(/\.(png|jpg|jpeg)$/i) ? (
                 <img 
-                  src={`http://localhost:4000/${previewDoc.archivo_path}`} 
+                  src={`http://localhost:4000/${(previewDoc.ruta_activa || previewDoc.archivo_firmado_path || previewDoc.archivo_path)}?v=${previewDoc.cache_token || Date.now()}`} 
                   alt={previewDoc.documento_nombre} 
                   style={{maxWidth: '100%', maxHeight: '70vh', borderRadius: '0.5rem', border: '1px solid #ccc'}}
                   onError={(e) => {
@@ -772,15 +883,11 @@ const ExpedienteManager = () => {
                               <div>
                                 <div className="font-semibold text-gray-800">{doc.documento_nombre}</div>
                                 <div className="text-sm text-gray-500">Tipo: {doc.documento_tipo} | Foja: {doc.numero_foja}</div>
+                                <div className="mt-1">{mostrarInfoFirma(doc)}</div>
                               </div>
                             </div>
                             <div className="text-sm">
-                              Estado: {doc.estado_firma === 'firmado' ? 
-                                <span className="text-green-600 font-semibold">✓ Firmado</span> : 
-                                doc.estado_firma === 'pendiente' ? 
-                                <span className="text-yellow-600 font-semibold">⏳ Pendiente</span> : 
-                                <span className="text-red-600 font-semibold">✗ Rechazado</span>
-                              }
+                              {mostrarInfoFirma(doc)}
                             </div>
                           </div>
                           
@@ -1116,7 +1223,64 @@ const ExpedienteManager = () => {
           </div>
         </div>
       )}
+
+      {/* Modal de Token Firma Simulator */}
+      {showTokenFirmaModal && docParaToken && (
+        <TokenFirmaSimulator
+          documento={docParaToken}
+          onFirmaExitosa={async (firmaData) => {
+            console.log('Firma exitosa:', firmaData);
+            console.log('Certificado recibido:', firmaData.certificado);
+            
+            const datosParaEnviar = {
+              metodo: 'token',
+              firmaDigital: firmaData.hash,
+              certificado: {
+                emisor: firmaData.certificado?.emisor || 'AFIP - Administración Federal de Ingresos Públicos',
+                titular: firmaData.certificado?.nombre || 'Certificado de Firma - Juan Pérez'
+              },
+              algoritmo: firmaData.algoritmo,
+              timestampFirma: firmaData.timestamp
+            };
+            console.log('Datos a enviar al backend:', datosParaEnviar);
+            
+            try {
+              // Llamar al backend para marcar el documento como firmado
+              console.log('=== ENVIANDO PETICIÓN DE FIRMA ===');
+              console.log('URL:', `/expedientes/${selectedExpediente.id}/documentos/${docParaToken.id}/firmar`);
+              console.log('Datos:', JSON.stringify(datosParaEnviar, null, 2));
+              
+              const response = await api.post(`/expedientes/${selectedExpediente.id}/documentos/${docParaToken.id}/firmar`, datosParaEnviar);
+              
+              console.log('=== RESPUESTA DEL SERVIDOR ===');
+              console.log('Status:', response.status);
+              console.log('Data:', response.data);
+              
+              alert('Documento firmado correctamente');
+            } catch (error) {
+              console.error('=== ERROR EN FIRMA ===');
+              console.error('Error completo:', error);
+              console.error('Response:', error.response?.data);
+              console.error('Status:', error.response?.status);
+              alert('Error al guardar la firma en el servidor: ' + (error.response?.data?.error || error.message));
+            }
+            
+            setShowTokenFirmaModal(false);
+            setDocParaToken(null);
+            setDocIdAFirmar(null);
+            setMetodoFirma('interno');
+            
+            // Actualizar tanto la lista como los detalles del expediente seleccionado
+            await fetchExpedientes();
+            await refreshSelectedExpediente();
+          }}
+          onCancel={() => {
+            setShowTokenFirmaModal(false);
+            setDocParaToken(null);
+          }}
+        />
+      )}
     </>
   );
-};
+}
 export default ExpedienteManager;

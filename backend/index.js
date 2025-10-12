@@ -1,3 +1,12 @@
+// Manejo global de errores no controlados
+process.on('uncaughtException', (err) => {
+  console.error('Excepción no controlada:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Promesa no manejada:', reason);
+});
+// ...existing code...
+import usuariosRoutes from './routes/usuarios.js';
 
 import express from 'express';
 import cors from 'cors';
@@ -41,6 +50,27 @@ import { initializeDefaultData } from './models/databaseExtended.js';
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// Log de rutas activas para depuración
+function printRoutes(app, prefix = '') {
+  if (!app._router) {
+    console.warn('No hay rutas registradas aún.');
+    return;
+  }
+  app._router.stack.forEach((middleware) => {
+    if (middleware.route) {
+      // Ruta directa
+      console.log(`[ROUTE] ${Object.keys(middleware.route.methods).join(',').toUpperCase()} ${prefix}${middleware.route.path}`);
+    } else if (middleware.name === 'router' && middleware.handle.stack) {
+      // Router anidado
+      middleware.handle.stack.forEach((handler) => {
+        if (handler.route) {
+          console.log(`[ROUTE] ${Object.keys(handler.route.methods).join(',').toUpperCase()} ${prefix}${handler.route.path}`);
+        }
+      });
+    }
+  });
+}
+
 async function startServer() {
   try {
     // Inicializar base de datos
@@ -49,8 +79,16 @@ async function startServer() {
     // Inicializar datos predeterminados para CA híbrida
     await initializeDefaultData();
 
-    app.use(cors());
+    app.use(cors({
+      origin: ['http://localhost:5174', 'http://localhost:5175'],
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true
+    }));
     app.use(express.json());
+
+    // Rutas para gestión de certificados de usuario (después de middlewares)
+    app.use('/api/usuarios', usuariosRoutes);
 
     // Servir archivos estáticos desde la carpeta uploads
     app.use('/uploads', express.static('uploads'));
@@ -63,39 +101,39 @@ async function startServer() {
 
     // Rutas de autenticación
     app.post('/register', register);
-app.post('/login', login);
+    app.post('/login', login);
 
-// Endpoint para obtener perfil del usuario
-app.get('/profile', authenticateToken, async (req, res) => {
-  try {
-    const usuario = await Usuario.findByPk(req.user.id, {
-      attributes: ['id', 'username', 'nombre_completo', 'email', 'rol_usuario', 'oficina_id']
+    // Endpoint para obtener perfil del usuario
+    app.get('/profile', authenticateToken, async (req, res) => {
+      try {
+        const usuario = await Usuario.findByPk(req.user.id, {
+          attributes: ['id', 'username', 'nombre_completo', 'email', 'rol_usuario', 'oficina_id']
+        });
+
+        if (!usuario) {
+          return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+
+        res.json({ user: usuario });
+      } catch (error) {
+        console.error('Error al obtener perfil:', error);
+        res.status(500).json({ error: 'Error al obtener perfil' });
+      }
     });
 
-    if (!usuario) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
-    }
+    // Nuevas rutas híbridas para certificados CA
+    app.use('/api', certificateRoutes);
 
-    res.json({ user: usuario });
-  } catch (error) {
-    console.error('Error al obtener perfil:', error);
-    res.status(500).json({ error: 'Error al obtener perfil' });
-  }
-});
+    // Rutas para historial de firmas
+    app.use('/api/signatures', signatureRoutes);
 
-// Nuevas rutas híbridas para certificados CA
-app.use('/api', certificateRoutes);
+    // Rutas para expedientes digitales
+    app.use('/api/expedientes', expedienteRoutes);
+    app.use('/api/firma-documentos', firmaDocumentosRoutes);
 
-// Rutas para historial de firmas
-app.use('/api/signatures', signatureRoutes);
-
-// Rutas para expedientes digitales
-app.use('/api/expedientes', expedienteRoutes);
-app.use('/api/firma-documentos', firmaDocumentosRoutes);
-
-// Rutas para workflow
-app.use('/api/oficinas', oficinasRoutes);
-app.use('/api/workflow', workflowRoutes);
+    // Rutas para workflow
+    app.use('/api/oficinas', oficinasRoutes);
+    app.use('/api/workflow', workflowRoutes);
 
 // Rutas para administración
 app.use('/api/admin', adminRoutes);
@@ -427,10 +465,12 @@ app.get('/', (req, res) => {
     // Iniciar el servidor
     app.listen(PORT, () => {
       console.log(`Servidor backend escuchando en http://localhost:${PORT}`);
+      printRoutes(app);
     });
 
   } catch (error) {
     console.error('Error al iniciar el servidor:', error);
+
     process.exit(1);
   }
 }

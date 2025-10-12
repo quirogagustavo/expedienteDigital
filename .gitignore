@@ -50,6 +50,35 @@ temp/
 *.key
 *.crt
 
+# Archivos generados
+backend/uploads/documentos/*
+!backend/uploads/documentos/.gitkeep
+expedientes_pdf/
+uploads/
+*.pdf
+
+# Scripts temporales
+*.sh
+test_*.js
+test_*.sh
+*.html
+decode_token.sh
+fix_expediente9_permisos.sh
+habilitar_acceso_expediente9.sh
+habilitar_acceso_expediente9_completo.sh
+reparar_expediente9.sh
+solucion_firmas.sh
+update_backend.sh
+verificar_expediente9.sh
+
+# Archivos temporales JSON
+expediente*.json
+
+# Documentación (excepto la oficial)
+frontend_descargar_pdf_unificado.md
+frontend_previsualizar_pdf_unificado.md
+SOLUCION_*.md
+
 # Backup files
 *.backup
 *.bak

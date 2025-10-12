@@ -57,33 +57,29 @@ export const register = async (req, res) => {
 // Login de usuario
 export const login = async (req, res) => {
   try {
-    const { username, password } = req.body;
-
-    // Buscar usuario
-    const usuario = await Usuario.findOne({ 
-      where: { username } 
+    const { username, email, password } = req.body;
+    if (!password || (!username && !email)) {
+      return res.status(400).json({ error: 'Faltan credenciales' });
+    }
+    // Buscar usuario por username o email
+    const usuario = await Usuario.findOne({
+      where: {
+        [Op.or]: [
+          username ? { username } : {},
+          email ? { email } : {}
+        ]
+      }
     });
-
     if (!usuario) {
-      return res.status(401).json({ 
-        error: 'Credenciales inválidas' 
-      });
+      return res.status(401).json({ error: 'Usuario no encontrado' });
     }
-
-    // Verificar la contraseña
     const passwordValido = await bcrypt.compare(password, usuario.password_hash);
-    
     if (!passwordValido) {
-      return res.status(401).json({ 
-        error: 'Credenciales inválidas' 
-      });
+      return res.status(401).json({ error: 'Contraseña incorrecta' });
     }
-
-    // Generar token
+    // Generar token JWT
     const token = generateToken(usuario.id);
-
     res.json({
-      message: 'Login exitoso',
       token,
       user: {
         id: usuario.id,
@@ -93,11 +89,8 @@ export const login = async (req, res) => {
         rol_usuario: usuario.rol_usuario
       }
     });
-
   } catch (error) {
     console.error('Error en login:', error);
-    res.status(500).json({ 
-      error: 'Error interno del servidor' 
-    });
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 };

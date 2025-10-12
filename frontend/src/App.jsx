@@ -98,7 +98,7 @@ function MainApp() {
     <div className="app-container">
       <Navbar />
       <div className="container">
-        <h1>Firma Digital de Documentos - Gobierno Argentino</h1>
+        <h1>Expediente Digital - Versión Preliminar</h1>
         
         {user && (
           <nav className="main-nav">

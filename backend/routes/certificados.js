@@ -83,12 +83,12 @@ router.post('/import-p12', authenticateToken, upload.single('certificate'), asyn
     const certificateBuffer = req.file.buffer;
 
     // Intentar parsear el certificado P12/PFX
-    let p12Der, p12Asn1, p12, certInfo;
+    let p12Der, p12Asn1, p12, certInfo, privateKey;
     
     try {
-      // Convertir buffer a base64 para forge
-      p12Der = forge.util.encode64(certificateBuffer);
-      p12Asn1 = forge.asn1.fromDer(forge.util.decode64(p12Der));
+      // Convertir buffer a string binario para forge
+      const p12String = certificateBuffer.toString('binary');
+      p12Asn1 = forge.asn1.fromDer(p12String);
       p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password);
       
       // Extraer información del certificado
@@ -110,7 +110,7 @@ router.post('/import-p12', authenticateToken, upload.single('certificate'), asyn
         return res.status(400).json({ error: 'No se encontró clave privada en el archivo' });
       }
 
-      const privateKey = keyBag.key;
+      privateKey = keyBag.key;
 
       // Extraer información del certificado
       certInfo = {
@@ -167,7 +167,7 @@ router.post('/import-p12', authenticateToken, upload.single('certificate'), asyn
       fecha_expiracion: certInfo.notAfter,
       certificado_pem: certPem,
       clave_privada_pem: privateKeyPem,
-      status: 'valid',
+      status: 'active',
       activo: true, // Activar automáticamente si es el primero
       emisor: certInfo.issuer,
       metadata: JSON.stringify({

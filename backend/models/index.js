@@ -85,7 +85,7 @@ const defineAssociations = () => {
   });
   
   ExpedienteDocumento.belongsTo(Usuario, {
-    foreignKey: 'usuario_creador',
+    foreignKey: 'usuario_agregado',
     as: 'creator'
   });
   

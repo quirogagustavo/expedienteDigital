@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Configuración base de la API
 const api = axios.create({
-  baseURL: 'http://localhost:4000',
+  baseURL: '/api', // Usar proxy de Vite para desarrollo
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -14,6 +14,7 @@ api.interceptors.request.use(
   (config) => {
     // Obtener token del localStorage si existe
     const token = localStorage.getItem('token');
+    console.debug('[API] Token enviado en request:', token);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

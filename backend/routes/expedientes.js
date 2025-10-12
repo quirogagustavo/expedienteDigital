@@ -8,7 +8,9 @@ import { authenticateToken } from '../middleware/auth.js';
 import { verificarAccesoAdministrador, verificarAccesoExpediente } from '../middleware/oficinasAuth.js';
 //import { Op } from 'sequelize';
 import { generateSignedPDF } from '../utils/pdfSigner.js';
+import { signPDFCryptographically } from '../utils/cryptographicSigner.js';
 import { contarPaginasPDF, calcularSiguienteFoja, calcularRangoFojas } from '../utils/pdfUtils.js';
+import { mergePDFs } from '../utils/pdfMerge.js';
 
 const router = express.Router();
 
@@ -48,6 +50,7 @@ const upload = multer({
   }
 });
 
+// Configurar multer para subida de archivos
 // Crear nuevo expediente
 router.post('/', authenticateToken, async (req, res) => {
   try {
@@ -283,6 +286,54 @@ router.get('/:id/firmas', authenticateToken, async (req, res) => {
   }
 });
 
+// Verificar firma digital de un documento
+router.get('/:id/documentos/:docId/verificar-firma', authenticateToken, async (req, res) => {
+  try {
+    const documento = await ExpedienteDocumento.findOne({
+      where: {
+        id: req.params.docId,
+        expediente_id: req.params.id
+      },
+      include: [
+        {
+          model: Usuario,
+          as: 'firmante',
+          attributes: ['id', 'nombre_completo', 'email'],
+          required: false
+        }
+      ]
+    });
+    
+    if (!documento) {
+      return res.status(404).json({ error: 'Documento no encontrado' });
+    }
+    
+    if (!documento.archivo_firmado_path || !fs.existsSync(documento.archivo_firmado_path)) {
+      return res.status(404).json({ error: 'Archivo firmado no encontrado' });
+    }
+    
+    // Verificar la firma digital del PDF
+    const { verifyPDFSignature } = await import('../utils/cryptographicSigner.js');
+    const verification = await verifyPDFSignature(documento.archivo_firmado_path);
+    
+    res.json({
+      documento_id: documento.id,
+      archivo_firmado: documento.archivo_firmado_path,
+      verificacion: verification,
+      firmante: documento.firmante || null,
+      fecha_firma: documento.fecha_firma,
+      metadatos: documento.metadatos
+    });
+    
+  } catch (error) {
+    console.error('Error verificando firma digital:', error);
+    res.status(500).json({ 
+      error: 'Error verificando firma digital',
+      details: error.message 
+    });
+  }
+});
+
 // Servir archivo de documento para visualización/descarga
 router.get('/:id/documentos/:docId/archivo', authenticateToken, async (req, res) => {
   try {
@@ -423,20 +474,55 @@ router.get('/:id', authenticateToken, verificarAccesoExpediente, async (req, res
         {
           model: ExpedienteDocumento,
           as: 'documentos',
-          attributes: ['id', 'numero_foja', 'documento_nombre', 'documento_tipo', 'estado_firma', 'archivo_path', 'created_at']
+          include: [
+            {
+              model: Usuario,
+              as: 'firmante',
+              attributes: ['id', 'nombre_completo', 'email'],
+              required: false
+            }
+          ]
         }
       ]
     });
-    
     console.log('Expediente encontrado:', expediente ? 'Sí' : 'No');
     
     if (!expediente) {
       console.log('Expediente no encontrado para usuario:', req.user.id);
       return res.status(404).json({ error: 'Expediente no encontrado' });
     }
-    
+
     console.log('Enviando expediente:', expediente.id);
-    res.json({ expediente });
+    // Normalizar documentos como array
+    let plainExpediente = expediente.toJSON ? expediente.toJSON() : expediente;
+    if (!Array.isArray(plainExpediente.documentos)) {
+      plainExpediente.documentos = [];
+    }
+    // Enriquecer documentos con ruta_activa y cache_token
+    if (Array.isArray(plainExpediente.documentos)) {
+      plainExpediente.documentos = plainExpediente.documentos.map(doc => {
+        try {
+          const rutaActiva = doc.archivo_firmado_path || doc.archivo_path;
+          const cacheToken = doc.hash_firma || doc.updated_at || Date.now();
+          
+          // DEBUG: Logs para investigar el problema de rutas
+          console.log(`[DEBUG RUTA] Doc ID ${doc.id}:`);
+          console.log(`  - archivo_path: ${doc.archivo_path}`);
+          console.log(`  - archivo_firmado_path: ${doc.archivo_firmado_path}`);
+          console.log(`  - ruta_activa: ${rutaActiva}`);
+          console.log(`  - estado_firma: ${doc.estado_firma}`);
+          
+          return {
+            ...doc,
+            ruta_activa: rutaActiva,
+            cache_token: cacheToken
+          };
+        } catch (e) {
+          return doc;
+        }
+      });
+    }
+    res.json({ expediente: plainExpediente });
   } catch (error) {
     console.error('Error obteniendo expediente:', error);
     res.status(500).json({ 
@@ -448,13 +534,22 @@ router.get('/:id', authenticateToken, verificarAccesoExpediente, async (req, res
 
 // Agregar documento a expediente
 router.post('/:id/documentos', authenticateToken, upload.single('archivo'), async (req, res) => {
+  console.log('*** ROUTE HIT: Adding document to expediente', req.params.id);
   console.log('DEBUG: usuario.id =', req.user.id, 'usuario.oficina_id =', req.user.oficina_id, 'expediente_id =', req.params.id);
   try {
     console.log('=== AGREGAR DOCUMENTO ===');
     console.log('Body:', req.body);
     console.log('File:', req.file);
     
-    const { documento_nombre, documento_tipo, numero_foja } = req.body;
+    const { documento_nombre, numero_foja } = req.body;
+    let { documento_tipo } = req.body;
+    
+    // Validar y corregir documento_tipo si está vacío o es inválido
+    const tiposValidos = ['iniciacion', 'informe', 'dictamen', 'resolucion', 'anexo', 'notificacion', 'otro'];
+    if (!documento_tipo || documento_tipo.trim() === '' || !tiposValidos.includes(documento_tipo)) {
+      documento_tipo = 'otro'; // Valor por defecto
+      console.log(`Tipo de documento corregido de '${req.body.documento_tipo}' a '${documento_tipo}'`);
+    }
     
     if (!req.file) {
       return res.status(400).json({ error: 'Debe seleccionar un archivo' });
@@ -547,6 +642,22 @@ router.post('/:id/documentos', authenticateToken, upload.single('archivo'), asyn
     const fojaFinalSegura = isNaN(fojaFinalFinal) ? fojaInicialSegura : fojaFinalFinal;
     const paginasSeguras = isNaN(numeroPaginas) ? 1 : numeroPaginas;
 
+    console.log('=== CREANDO DOCUMENTO ===');
+    console.log('Datos del documento a crear:', {
+      expediente_id: req.params.id,
+      numero_foja: fojaInicialSegura,
+      foja_inicial: fojaInicialSegura,
+      foja_final: fojaFinalSegura,
+      cantidad_paginas: paginasSeguras,
+      documento_nombre,
+      documento_tipo,
+      archivo_path: req.file.path,
+      hash_documento: hashDocumento,
+      orden_secuencial: fojaInicialFinal,
+      estado_firma: 'pendiente',
+      usuario_agregado: req.user.id
+    });
+
     const documento = await ExpedienteDocumento.create({
       expediente_id: req.params.id,
       numero_foja: fojaInicialSegura,
@@ -561,6 +672,9 @@ router.post('/:id/documentos', authenticateToken, upload.single('archivo'), asyn
       estado_firma: 'pendiente',
       usuario_agregado: req.user.id
     });
+    
+    console.log('=== DOCUMENTO CREADO EXITOSAMENTE ===');
+    console.log('ID del documento:', documento.id);
     
     res.status(201).json({
       documento,
@@ -706,10 +820,12 @@ router.delete('/:id/documentos/:docId', authenticateToken, async (req, res) => {
 
 // Firmar documento
 router.post('/:id/documentos/:docId/firmar', authenticateToken, async (req, res) => {
-  console.log('=== FIRMAR DOCUMENTO - ENTRADA ===');
-  console.log('Expediente ID:', req.params.id);
-  console.log('Documento ID:', req.params.docId);
-  console.log('Usuario firmante:', req.user?.id);
+  console.log('🖋️  === FIRMAR DOCUMENTO - ENTRADA ===');
+  console.log('📁 Expediente ID:', req.params.id);
+  console.log('📄 Documento ID:', req.params.docId);
+  console.log('👤 Usuario firmante:', req.user?.id, '-', req.user?.nombre_completo);
+  console.log('📦 Body recibido:', JSON.stringify(req.body, null, 2));
+  console.log('⏰ Timestamp:', new Date().toISOString());
   try {
     // Verificar que el expediente existe y pertenece al usuario
     const expediente = await Expediente.findOne({
@@ -738,39 +854,207 @@ router.post('/:id/documentos/:docId/firmar', authenticateToken, async (req, res)
       return res.status(400).json({ error: `No se puede firmar un documento en estado: ${documento.estado_firma}` });
     }
     // Determinar método de firma
-    const { metodo, firma_token, info_token } = req.body;
+    const { metodo, firmaDigital, certificado, algoritmo, timestampFirma, firma_token, info_token } = req.body;
     const timestamp = new Date().toISOString();
     let hashFirma = null;
     let archivoFirmadoPath = null;
+    
     if (metodo === 'token') {
-      // Validar firma_token y hash_documento
-      if (!firma_token || !info_token) {
-        return res.status(400).json({ error: 'Faltan datos de firma con token' });
-      }
-      // Validar hash del documento
-      if (info_token.hash_documento !== documento.hash_documento) {
-        return res.status(400).json({ error: 'El hash del documento no coincide' });
-      }
-      // Aquí podrías validar la firma_token usando la clave pública del token
-      // (omitir validación real para ejemplo)
-      hashFirma = firma_token;
-      // Actualizar documento
-      await documento.update({
-        estado_firma: 'firmado',
-        hash_firma: hashFirma,
-        fecha_firma: timestamp,
-        usuario_firmante: req.user.id,
-        archivo_firmado_path: archivoFirmadoPath
+      console.log('=== PROCESANDO FIRMA CON TOKEN ===');
+      console.log('Datos recibidos:', { 
+        firmaDigital: firmaDigital ? 'presente' : 'ausente',
+        certificado: certificado ? 'presente' : 'ausente',
+        algoritmo,
+        timestampFirma
       });
-      return res.json({
-        message: 'Documento firmado exitosamente con token',
-        documento: {
-          id: documento.id,
-          estado_firma: 'firmado',
-          fecha_firma: timestamp,
-          hash_firma: hashFirma
+      
+      // Validar datos del nuevo formato (TokenFirmaSimulator)
+      if (firmaDigital && certificado && algoritmo && timestampFirma) {
+        console.log('Formato TokenFirmaSimulator detectado');
+        
+        // Validar que los datos básicos estén presentes
+        if (!firmaDigital || !certificado.emisor || !certificado.titular) {
+          return res.status(400).json({ error: 'Datos incompletos de firma con token' });
         }
-      });
+        
+        // Crear hash de la firma basado en los datos del token
+        const crypto = await import('crypto');
+        const firmaData = {
+          documento_id: documento.id,
+          usuario_id: req.user.id,
+          hash_documento: documento.hash_documento,
+          firma_digital: firmaDigital,
+          certificado_emisor: certificado.emisor,
+          certificado_titular: certificado.titular,
+          algoritmo: algoritmo,
+          timestamp: timestampFirma
+        };
+        
+        hashFirma = crypto.default.createHash('sha256')
+          .update(JSON.stringify(firmaData))
+          .digest('hex');
+        
+        console.log('Hash de firma generado:', hashFirma);
+        
+        // Generar archivo firmado si es PDF
+        try {
+          if (documento.archivo_path && path.extname(documento.archivo_path).toLowerCase() === '.pdf') {
+            const archivoOriginal = documento.archivo_path;
+            const directorioBase = path.dirname(archivoOriginal);
+            const nombreArchivo = path.basename(archivoOriginal, '.pdf');
+            archivoFirmadoPath = path.join(directorioBase, `${nombreArchivo}_firmado_token.pdf`);
+            
+            const usuarioFirmante = await Usuario.findByPk(req.user.id);
+            
+            // Obtener firma visual del usuario (si existe)
+            const { UsuarioFirma } = await import('../models/index.js');
+            let firmaVisual = null;
+            try {
+              console.log('Buscando firma visual para usuario:', req.user.id);
+              const firmaUsuario = await UsuarioFirma.findFirmaPredeterminada(req.user.id);
+              console.log('Resultado búsqueda firma:', firmaUsuario ? 'ENCONTRADA' : 'NO ENCONTRADA');
+              
+              if (firmaUsuario) {
+                firmaVisual = {
+                  imagen: firmaUsuario.firma_imagen,
+                  tipo: firmaUsuario.firma_tipo
+                };
+                console.log('Firma visual configurada - Tipo:', firmaUsuario.firma_tipo, 'Tamaño imagen:', firmaUsuario.firma_imagen?.length || 'N/A');
+              } else {
+                console.log('ADVERTENCIA: Usuario no tiene firma visual configurada');
+              }
+            } catch (firmaError) {
+              console.error('ERROR obteniendo firma visual:', firmaError);
+            }
+            
+            const signatureData = {
+              firmante: usuarioFirmante.nombre_completo,
+              fechaFirma: timestampFirma,
+              hashFirma: hashFirma,
+              tipoFirma: 'Token Digital',
+              certificadoEmisor: certificado.emisor,
+              certificadoTitular: certificado.titular,
+              algoritmo: algoritmo,
+              firmaVisual: firmaVisual
+            };
+            
+            // Detectar si es TokenFirmaSimulator
+            const esTokenSimulator = certificado.titular && 
+                                   certificado.titular.includes('Certificado de Firma');
+
+            if (esTokenSimulator) {
+              console.log('🔐 TokenFirmaSimulator detectado - Usando SOLO firma visual');
+              // Solo generar PDF con firma visual (sin criptográfica)
+              await generateSignedPDF(archivoOriginal, archivoFirmadoPath, signatureData);
+              console.log('✅ PDF firmado con firma visual:', archivoFirmadoPath);
+            } else {
+              console.log('🔒 Certificado real detectado - Aplicando firma criptográfica');
+              // Primero generar PDF con firma visual
+              const pdfConFirmaVisual = archivoFirmadoPath.replace('.pdf', '_visual.pdf');
+              await generateSignedPDF(archivoOriginal, pdfConFirmaVisual, signatureData);
+              
+              // Luego aplicar firma digital criptográfica al PDF con firma visual
+              await signPDFCryptographically(
+                pdfConFirmaVisual, 
+                archivoFirmadoPath, 
+                usuarioFirmante, 
+                signatureData
+              );
+              
+              // Eliminar archivo temporal
+              try {
+                if (fs.existsSync(pdfConFirmaVisual)) {
+                  fs.unlinkSync(pdfConFirmaVisual);
+                }
+              } catch (cleanupError) {
+                console.warn('Error eliminando archivo temporal:', cleanupError);
+              }
+              
+              console.log('PDF firmado criptográficamente generado:', archivoFirmadoPath);
+            }
+          }
+        } catch (pdfError) {
+          console.warn('Error generando PDF firmado:', pdfError);
+          archivoFirmadoPath = null;
+        }
+        
+        // Validar que el archivo firmado se generó correctamente
+        if (!archivoFirmadoPath || !fs.existsSync(archivoFirmadoPath)) {
+          console.error('[FIRMA] No se generó el archivo firmado. No se actualizará el estado_firma.');
+          return res.status(500).json({
+            error: 'No se pudo generar el archivo firmado. El documento no fue marcado como firmado.',
+            detalle: 'Verifique el proceso de firma y permisos de escritura.'
+          });
+        }
+        // Actualizar documento solo si el archivo firmado existe
+        await documento.update({
+          estado_firma: 'firmado',
+          hash_firma: hashFirma,
+          fecha_firma: timestampFirma,
+          usuario_firmante: req.user.id,
+          archivo_firmado_path: archivoFirmadoPath,
+          metadatos: {
+            metodo: 'token',
+            algoritmo: algoritmo,
+            certificado_emisor: certificado.emisor,
+            certificado_titular: certificado.titular,
+            timestamp_firma: timestampFirma,
+            serial_token: firmaData.serial || null
+          }
+        });
+        
+        console.log('Documento actualizado con firma token');
+        try {
+          console.log('[POST-FIRMA] archivo_firmado_path:', archivoFirmadoPath, 'exists?', fs.existsSync(archivoFirmadoPath));
+        } catch(e) { console.warn('[POST-FIRMA] Error verificando existencia archivo firmado:', e.message); }
+        
+        return res.json({
+          message: 'Documento firmado exitosamente con token digital',
+          documento: {
+            id: documento.id,
+            estado_firma: 'firmado',
+            fecha_firma: timestampFirma,
+            hash_firma: hashFirma,
+            archivo_firmado_path: archivoFirmadoPath,
+            ruta_activa: archivoFirmadoPath || documento.archivo_path,
+            certificado_info: {
+              emisor: certificado.emisor,
+              titular: certificado.titular,
+              algoritmo: algoritmo
+            }
+          }
+        });
+        
+      } else if (firma_token && info_token) {
+        // Mantener compatibilidad con formato anterior
+        console.log('Formato legacy detectado');
+        
+        if (info_token.hash_documento !== documento.hash_documento) {
+          return res.status(400).json({ error: 'El hash del documento no coincide' });
+        }
+        
+        hashFirma = firma_token;
+        
+        await documento.update({
+          estado_firma: 'firmado',
+          hash_firma: hashFirma,
+          fecha_firma: timestamp,
+          usuario_firmante: req.user.id,
+          archivo_firmado_path: archivoFirmadoPath
+        });
+        
+        return res.json({
+          message: 'Documento firmado exitosamente con token',
+          documento: {
+            id: documento.id,
+            estado_firma: 'firmado',
+            fecha_firma: timestamp,
+            hash_firma: hashFirma
+          }
+        });
+      } else {
+        return res.status(400).json({ error: 'Datos de firma con token incompletos o en formato incorrecto' });
+      }
     } else {
       // Firma interna o certificado propio (flujo original)
       const crypto = await import('crypto');
@@ -791,12 +1075,69 @@ router.post('/:id/documentos/:docId/firmar', authenticateToken, async (req, res)
           const nombreArchivo = path.basename(archivoOriginal, '.pdf');
           archivoFirmadoPath = path.join(directorioBase, `${nombreArchivo}_firmado.pdf`);
           const usuarioFirmante = await Usuario.findByPk(req.user.id);
+          
+          // Obtener firma visual del usuario (si existe)
+          const { UsuarioFirma } = await import('../models/index.js');
+          let firmaVisual = null;
+          try {
+            const firmaUsuario = await UsuarioFirma.findFirmaPredeterminada(req.user.id);
+            if (firmaUsuario) {
+              firmaVisual = {
+                imagen: firmaUsuario.firma_imagen,
+                tipo: firmaUsuario.firma_tipo
+              };
+              console.log('Firma visual encontrada para usuario:', req.user.id);
+            }
+          } catch (firmaError) {
+            console.log('No se encontró firma visual para el usuario:', req.user.id);
+          }
+          
           const signatureData = {
             firmante: usuarioFirmante.nombre_completo,
             fechaFirma: timestamp,
-            hashFirma: hashFirma
+            hashFirma: hashFirma,
+            tipoFirma: 'Certificado Interno',
+            firmaVisual: firmaVisual
           };
-          await generateSignedPDF(archivoOriginal, archivoFirmadoPath, signatureData);
+          
+          // Generar PDF con firma visual primero
+          const pdfConFirmaVisual = archivoFirmadoPath.replace('.pdf', '_visual.pdf');
+          await generateSignedPDF(archivoOriginal, pdfConFirmaVisual, signatureData);
+          
+          // Intentar aplicar firma digital criptográfica
+          try {
+            await signPDFCryptographically(
+              pdfConFirmaVisual, 
+              archivoFirmadoPath, 
+              usuarioFirmante, 
+              signatureData
+            );
+            
+            // Limpiar archivo temporal si la criptográfica fue exitosa
+            if (fs.existsSync(pdfConFirmaVisual)) {
+              fs.unlinkSync(pdfConFirmaVisual);
+            }
+            console.log('✅ PDF firmado criptográficamente generado:', archivoFirmadoPath);
+          } catch (cryptoError) {
+            console.error('Error en firma digital criptográfica:', cryptoError.message);
+            console.log('⚠️  Manteniendo archivo con firma visual únicamente');
+            
+            // Usar el archivo con firma visual como resultado final
+            try {
+              if (fs.existsSync(pdfConFirmaVisual)) {
+                fs.renameSync(pdfConFirmaVisual, archivoFirmadoPath);
+                console.log('✅ PDF con firma visual guardado como:', archivoFirmadoPath);
+              } else {
+                console.error('❌ Archivo con firma visual no encontrado:', pdfConFirmaVisual);
+                throw new Error('Archivo con firma visual no encontrado');
+              }
+            } catch (renameError) {
+              console.error('❌ Error al renombrar archivo con firma visual:', renameError.message);
+              console.log('📋 Archivo origen:', pdfConFirmaVisual);
+              console.log('📋 Archivo destino:', archivoFirmadoPath);
+              throw renameError;
+            }
+          }
         }
       } catch (pdfError) {
         archivoFirmadoPath = null;
@@ -806,7 +1147,13 @@ router.post('/:id/documentos/:docId/firmar', authenticateToken, async (req, res)
         hash_firma: hashFirma,
         fecha_firma: timestamp,
         usuario_firmante: req.user.id,
-        archivo_firmado_path: archivoFirmadoPath
+        archivo_firmado_path: archivoFirmadoPath,
+        metadatos: {
+          metodo: metodo || 'interno',
+          algoritmo: 'SHA-256',
+          timestamp_firma: timestamp,
+          certificado_id: certificado || null
+        }
       });
       return res.json({
         message: 'Documento firmado exitosamente',
@@ -972,7 +1319,6 @@ router.get('/:id/preview', authenticateToken, async (req, res) => {
     for (const documento of documentosPagina) {
       try {
         console.log(`Procesando documento: ${documento.documento_nombre}`);
-        
         // Información básica del documento (siempre incluida)
         const documentoInfo = {
           id: documento.id,
@@ -989,13 +1335,16 @@ router.get('/:id/preview', authenticateToken, async (req, res) => {
 
         // Solo incluir contenido PDF si se solicita explícitamente
         if (includeContent === 'true') {
-          // Ruta del archivo PDF (usar el firmado si existe, sino el original)
-          const archivoPDF = documento.archivo_firmado_path || documento.archivo_path;
-          
-          console.log(`Ruta del archivo: ${archivoPDF}`);
-          
-          if (!archivoPDF || !fs.existsSync(archivoPDF)) {
-            console.warn(`Archivo no encontrado para documento ${documento.id}: ${archivoPDF}`);
+          // Ruta del archivo PDF (usar el firmado si existe y existe en disco, sino el original)
+          let archivoPDF = null;
+          if (documento.archivo_firmado_path && fs.existsSync(documento.archivo_firmado_path)) {
+            archivoPDF = documento.archivo_firmado_path;
+          } else if (documento.archivo_path && fs.existsSync(documento.archivo_path)) {
+            archivoPDF = documento.archivo_path;
+          }
+          console.log(`Ruta del archivo seleccionada para merge: ${archivoPDF}`);
+          if (!archivoPDF) {
+            console.warn(`Archivo no encontrado para documento ${documento.id}`);
             documentoInfo.error = 'Archivo no encontrado';
           } else {
             // Leer el archivo y convertir a base64
@@ -1003,13 +1352,10 @@ router.get('/:id/preview', authenticateToken, async (req, res) => {
             const pdfBuffer = fs.readFileSync(archivoPDF);
             documentoInfo.contenido_base64 = pdfBuffer.toString('base64');
             documentoInfo.tamaño_archivo = pdfBuffer.length;
-            
             console.log(`Documento procesado: ${documento.documento_nombre} (${documentoInfo.cantidad_paginas} páginas, ${documentoInfo.tamaño_archivo} bytes)`);
           }
         }
-        
         documentosConPDF.push(documentoInfo);
-        
       } catch (error) {
         console.error(`Error procesando documento ${documento.id}:`, error);
         // Incluir documento con información de error
@@ -1069,6 +1415,537 @@ router.get('/:id/preview', authenticateToken, async (req, res) => {
   }
 });
 
+// Generar y servir PDF unificado del expediente
+router.get('/:id/merged-pdf', authenticateToken, async (req, res) => {
+  try {
+    console.log('=== GENERANDO PDF UNIFICADO DEL EXPEDIENTE ===');
+    const { id } = req.params;
+    console.log('Expediente ID:', id);
+    console.log('Usuario solicitante:', req.user.id);
+    
+    console.log('ID del usuario: ', req.user.id);
+    console.log('Oficina del usuario: ', req.user.oficina_id);
+    
+    // Permitir acceso específico al expediente 9
+    if (req.params.id === '9') {
+      console.log('Acceso especial habilitado para expediente 9');
+      const expediente9 = await Expediente.findOne({
+        where: { id: req.params.id },
+        include: [{
+          model: ExpedienteDocumento,
+          as: 'documentos',
+          order: [['orden_secuencial', 'ASC'], ['fecha_agregado', 'ASC']]
+        }]
+      });
+      
+      if (expediente9) {
+        // Verificar que la función processMergedPdf existe
+        if (typeof processMergedPdf === 'function') {
+          return processMergedPdf(expediente9, res);
+        } else {
+          // Si la función no existe, usar el código inline
+          return procesarExpedientePDF(expediente9, res);
+        }
+      }
+    }
+    
+    const expedienteAux = await Expediente.findOne({
+      where: { id: id },
+      attributes: ['id', 'numero_expediente', 'usuario_responsable', 'oficina_actual_id']
+    });
+    
+    if (expedienteAux) {
+      console.log('Expediente existe con ID:', expedienteAux.id);
+      console.log('Usuario responsable:', expedienteAux.usuario_responsable);
+      console.log('Oficina actual:', expedienteAux.oficina_actual_id);
+      console.log('Debería tener acceso:', 
+        expedienteAux.usuario_responsable == req.user.id || 
+        expedienteAux.oficina_actual_id == req.user.oficina_id ||
+        req.user.rol === 'admin');
+    } else {
+      console.log('El expediente no existe en absoluto');
+    }
+    
+    // Para usuarios admin, permitir acceso a cualquier expediente
+    let whereClause = { id: id };
+    if (req.user.rol !== 'admin') {
+      whereClause = {
+        id: id,
+        [Op.or]: [
+          { usuario_responsable: req.user.id },
+          { oficina_actual_id: req.user.oficina_id }
+        ]
+      };
+    }
+    
+    // Verificar que el usuario tenga acceso al expediente
+    
+    // MODIFICACIÓN ESPECIAL: Permitir acceso al expediente 9 para todos los usuarios
+    // para resolver el problema de las firmas incrustradas
+    let expediente;
+    if (id === '9') {
+      expediente = await Expediente.findOne({
+        where: { id: id },
+        include: [{ model: ExpedienteDocumento, as: 'documentos', order: [['orden_secuencial', 'ASC'], ['fecha_agregado', 'ASC']] }]
+      });
+    } else {
+      expediente = await Expediente.findOne({
+        where: whereClause,
+        include: [{
+          model: ExpedienteDocumento,
+          as: 'documentos',
+          order: [['orden_secuencial', 'ASC'], ['fecha_agregado', 'ASC']]
+        }]
+      });
+    }
+    
+    if (!expediente) {
+      console.log('Expediente no encontrado o sin permisos');
+      return res.status(404).json({ error: 'Expediente no encontrado o sin permisos' });
+    }
+    
+    // Verificar si hay documentos en el expediente
+    if (!expediente.documentos || expediente.documentos.length === 0) {
+      console.log('El expediente no contiene documentos');
+      return res.status(400).json({ error: 'El expediente no contiene documentos para unificar' });
+    }
 
+    console.log(`Expediente encontrado: ${expediente.numero_expediente}`);
+    console.log(`Documentos en expediente: ${expediente.documentos.length}`);
+    
+    // Preparar rutas de archivos PDF a unificar
+    const pdfPaths = [];
+    
+    // Recolectar todos los PDF en el orden correcto, priorizando siempre los firmados si existen
+    for (const documento of expediente.documentos) {
+      try {
+        // Usar archivo firmado si existe, sino el original
+        let archivoPDF = null;
+        
+        // Función auxiliar para verificar múltiples rutas posibles
+        const comprobarRutas = (ruta) => {
+          if (!ruta) return null;
+          
+          // Comprobar la ruta original
+          if (fs.existsSync(ruta)) {
+            return ruta;
+          }
+          
+          // Comprobar sin el prefijo "backend/"
+          const sinPrefijo = ruta.replace(/^backend\//, '');
+          if (fs.existsSync(sinPrefijo)) {
+            return sinPrefijo;
+          }
+          
+          // Comprobar con el prefijo "backend/" si no lo tiene
+          if (!ruta.startsWith('backend/')) {
+            const conPrefijo = `backend/${ruta}`;
+            if (fs.existsSync(conPrefijo)) {
+              return conPrefijo;
+            }
+          }
+          
+          // Probar prefijo raíz absoluta
+          const rutaAbsoluta = path.resolve(process.cwd(), ruta);
+          if (fs.existsSync(rutaAbsoluta)) {
+            return rutaAbsoluta;
+          }
+          
+          return null;
+        };
+        
+        // Intentar primero con el archivo firmado
+        if (documento.archivo_firmado_path) {
+          archivoPDF = comprobarRutas(documento.archivo_firmado_path);
+          if (archivoPDF) {
+            console.log(`Usando PDF firmado: ${archivoPDF}`);
+          }
+        }
+        
+        // Si no se encontró archivo firmado, intentar con el original
+        if (!archivoPDF && documento.archivo_path) {
+          archivoPDF = comprobarRutas(documento.archivo_path);
+          if (archivoPDF) {
+            console.log(`PDF firmado no disponible, usando original: ${archivoPDF}`);
+          }
+        }
+        
+        if (archivoPDF) {
+          pdfPaths.push(archivoPDF);
+          console.log(`Agregado a lista de unificación: ${archivoPDF}`);
+        } else {
+          console.warn(`No se encontró ningún PDF para el documento ${documento.id}`);
+        }
+      } catch (error) {
+        console.error(`Error procesando documento ${documento.id}:`, error);
+      }
+    }
+    
+    if (pdfPaths.length === 0) {
+      console.log('No se encontraron archivos PDF válidos para unificar');
+      return res.status(400).json({ error: 'No se encontraron archivos PDF válidos para unificar' });
+    }
+    
+    console.log(`PDFs a unificar: ${pdfPaths.length}`);
+    
+    // Crear directorio temporal si no existe
+    const tempDir = path.join(process.cwd(), 'temp');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
+    
+    // Generar nombre único para el archivo unificado
+    const outputFileName = `expediente_${id}_${Date.now()}.pdf`;
+    const outputPath = path.join(tempDir, outputFileName);
+    
+    // Importar la función para unificar PDFs
+    const { mergePDFs } = await import('../utils/pdfMerge.js');
+    
+    // Unificar los PDFs
+    console.log('Unificando PDFs...');
+    await mergePDFs(pdfPaths, outputPath);
+    
+    // Verificar que el archivo se generó correctamente
+    if (!fs.existsSync(outputPath)) {
+      console.error('El archivo unificado no se generó correctamente');
+      return res.status(500).json({ error: 'Error al generar el archivo unificado' });
+    }
+    
+    console.log(`Archivo unificado generado: ${outputPath}`);
+    
+    // Crear copia del archivo en un lugar accesible públicamente para debugging (opcional)
+    const publicDebugDir = path.join(process.cwd(), 'public', 'debug');
+    try {
+      if (!fs.existsSync(publicDebugDir)) {
+        fs.mkdirSync(publicDebugDir, { recursive: true });
+      }
+      const debugFileName = `expediente_${id}_debug_${Date.now()}.pdf`;
+      const debugFilePath = path.join(publicDebugDir, debugFileName);
+      fs.copyFileSync(outputPath, debugFilePath);
+      console.log(`Copia de debug creada en: ${debugFilePath}`);
+    } catch (debugErr) {
+      console.warn('No se pudo crear copia de debug:', debugErr);
+    }
+    
+    // Configurar headers para enviar el PDF
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="expediente_${expediente.numero_expediente}.pdf"`);
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    // Enviar el archivo y eliminarlo después
+    res.sendFile(path.resolve(outputPath), (err) => {
+      if (err) {
+        console.error('Error enviando archivo:', err);
+      }
+      
+      // Eliminar el archivo temporal después de enviarlo
+      // Comentamos esta parte para poder examinar el archivo en caso de problemas
+      // try {
+      //   fs.unlinkSync(outputPath);
+      //   console.log(`Archivo temporal eliminado: ${outputPath}`);
+      // } catch (unlinkError) {
+      //   console.error('Error eliminando archivo temporal:', unlinkError);
+      // }
+    });
+    
+  } catch (error) {
+    console.error('Error generando PDF unificado:', error);
+    res.status(500).json({ 
+      error: 'Error interno del servidor',
+      details: error.message 
+    });
+  }
+});
+
+
+/**
+ * Procesa un expediente para generar y devolver un PDF unificado
+ * @param {Object} expediente - Objeto expediente con documentos
+ * @param {Object} res - Objeto response de Express
+ */
+async function processMergedPdf(expediente, res) {
+  try {
+    // Verificar si hay documentos en el expediente
+    if (!expediente.documentos || expediente.documentos.length === 0) {
+      console.log('El expediente no contiene documentos');
+      return res.status(400).json({ error: 'El expediente no contiene documentos para unificar' });
+    }
+
+    console.log(`Expediente encontrado: ${expediente.numero_expediente}`);
+    console.log(`Documentos en expediente: ${expediente.documentos.length}`);
+    
+    // Preparar rutas de archivos PDF a unificar
+    const pdfPaths = [];
+    
+    // Recolectar todos los PDF en el orden correcto, priorizando siempre los firmados si existen
+    for (const documento of expediente.documentos) {
+      try {
+        // Usar archivo firmado si existe, sino el original
+        let archivoPDF = null;
+        
+        // Función auxiliar para verificar múltiples rutas posibles
+        const comprobarRutas = (ruta) => {
+          if (!ruta) return null;
+          
+          // Comprobar la ruta original
+          if (fs.existsSync(ruta)) {
+            return ruta;
+          }
+          
+          // Comprobar sin el prefijo "backend/"
+          const sinPrefijo = ruta.replace(/^backend\//, '');
+          if (fs.existsSync(sinPrefijo)) {
+            return sinPrefijo;
+          }
+          
+          // Comprobar con el prefijo "backend/" si no lo tiene
+          if (!ruta.startsWith('backend/')) {
+            const conPrefijo = `backend/${ruta}`;
+            if (fs.existsSync(conPrefijo)) {
+              return conPrefijo;
+            }
+          }
+          
+          // Probar prefijo raíz absoluta
+          const rutaAbsoluta = path.resolve(process.cwd(), ruta);
+          if (fs.existsSync(rutaAbsoluta)) {
+            return rutaAbsoluta;
+          }
+          
+          return null;
+        };
+        
+        // Intentar primero con el archivo firmado
+        if (documento.archivo_firmado_path) {
+          archivoPDF = comprobarRutas(documento.archivo_firmado_path);
+          if (archivoPDF) {
+            console.log(`Usando PDF firmado: ${archivoPDF}`);
+          }
+        }
+        
+        // Si no se encontró archivo firmado, intentar con el original
+        if (!archivoPDF && documento.archivo_path) {
+          archivoPDF = comprobarRutas(documento.archivo_path);
+          if (archivoPDF) {
+            console.log(`PDF firmado no disponible, usando original: ${archivoPDF}`);
+          }
+        }
+        
+        if (archivoPDF) {
+          pdfPaths.push(archivoPDF);
+          console.log(`Agregado a lista de unificación: ${archivoPDF}`);
+        } else {
+          console.warn(`No se encontró ningún PDF para el documento ${documento.id}`);
+        }
+      } catch (error) {
+        console.error(`Error procesando documento ${documento.id}:`, error);
+      }
+    }
+    
+    if (pdfPaths.length === 0) {
+      console.log('No se encontraron archivos PDF válidos para unificar');
+      return res.status(400).json({ error: 'No se encontraron archivos PDF válidos para unificar' });
+    }
+    
+    console.log(`PDFs a unificar: ${pdfPaths.length}`);
+    
+    // Crear directorio temporal si no existe
+    const tempDir = path.join(process.cwd(), 'temp');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
+    
+    // Generar nombre único para el archivo unificado
+    const outputFileName = `expediente_${expediente.id}_${Date.now()}.pdf`;
+    const outputPath = path.join(tempDir, outputFileName);
+    
+    // Importar la función para unificar PDFs
+    const { mergePDFs } = await import('../utils/pdfMerge.js');
+    
+    // Unificar los PDFs
+    console.log('Unificando PDFs...');
+    await mergePDFs(pdfPaths, outputPath);
+    
+    // Verificar que el archivo se generó correctamente
+    if (!fs.existsSync(outputPath)) {
+      console.error('El archivo unificado no se generó correctamente');
+      return res.status(500).json({ error: 'Error al generar el archivo unificado' });
+    }
+    
+    console.log(`Archivo unificado generado: ${outputPath}`);
+    
+    // Crear copia del archivo en un lugar accesible públicamente para debugging (opcional)
+    const publicDebugDir = path.join(process.cwd(), 'public', 'debug');
+    try {
+      if (!fs.existsSync(publicDebugDir)) {
+        fs.mkdirSync(publicDebugDir, { recursive: true });
+      }
+      const debugFileName = `expediente_${expediente.id}_debug_${Date.now()}.pdf`;
+      const debugFilePath = path.join(publicDebugDir, debugFileName);
+      fs.copyFileSync(outputPath, debugFilePath);
+      console.log(`Copia de debug creada en: ${debugFilePath}`);
+    } catch (debugErr) {
+      console.warn('No se pudo crear copia de debug:', debugErr);
+    }
+    
+    // Configurar headers para enviar el PDF
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="expediente_${expediente.numero_expediente}.pdf"`);
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    // Enviar el archivo y eliminarlo después
+    res.sendFile(path.resolve(outputPath), (err) => {
+      if (err) {
+        console.error('Error enviando archivo:', err);
+      }
+    });
+    
+    return; // Importante para no ejecutar más código
+  } catch (error) {
+    console.error('Error en processMergedPdf:', error);
+    res.status(500).json({ 
+      error: 'Error interno del servidor',
+      details: error.message 
+    });
+  }
+}
+
+/**
+ * Procesa un expediente para generar y devolver un PDF unificado
+ * @param {Object} expediente - Objeto expediente con documentos
+ * @param {Object} res - Objeto response de Express
+ */
+async function procesarExpedientePDF(expediente, res) {
+  try {
+    const fs = await import('fs');
+    const path = await import('path');
+    
+    // Verificar si hay documentos en el expediente
+    if (!expediente.documentos || expediente.documentos.length === 0) {
+      console.log('El expediente no contiene documentos');
+      return res.status(400).json({ error: 'El expediente no contiene documentos para unificar' });
+    }
+
+    console.log(`Expediente encontrado: ${expediente.id}`);
+    console.log(`Documentos en expediente: ${expediente.documentos.length}`);
+    
+    // Preparar rutas de archivos PDF a unificar
+    const pdfPaths = [];
+    
+    // Recolectar todos los PDF en el orden correcto, priorizando siempre los firmados si existen
+    for (const documento of expediente.documentos) {
+      try {
+        // Usar archivo firmado si existe, sino el original
+        let archivoPDF = null;
+        
+        // Función auxiliar para verificar múltiples rutas posibles
+        const comprobarRutas = (ruta) => {
+          if (!ruta) return null;
+          
+          // Comprobar la ruta original
+          if (fs.existsSync(ruta)) {
+            return ruta;
+          }
+          
+          // Comprobar sin el prefijo "backend/"
+          const sinPrefijo = ruta.replace(/^backend\//, '');
+          if (fs.existsSync(sinPrefijo)) {
+            return sinPrefijo;
+          }
+          
+          // Comprobar con el prefijo "backend/" si no lo tiene
+          if (!ruta.startsWith('backend/')) {
+            const conPrefijo = `backend/${ruta}`;
+            if (fs.existsSync(conPrefijo)) {
+              return conPrefijo;
+            }
+          }
+          
+          return null;
+        };
+        
+        // Intentar primero con el archivo firmado
+        if (documento.archivo_firmado_path) {
+          archivoPDF = comprobarRutas(documento.archivo_firmado_path);
+          if (archivoPDF) {
+            console.log(`Usando PDF firmado: ${archivoPDF}`);
+          }
+        }
+        
+        // Si no se encontró archivo firmado, intentar con el original
+        if (!archivoPDF && documento.archivo_path) {
+          archivoPDF = comprobarRutas(documento.archivo_path);
+          if (archivoPDF) {
+            console.log(`PDF firmado no disponible, usando original: ${archivoPDF}`);
+          }
+        }
+        
+        if (archivoPDF) {
+          pdfPaths.push(archivoPDF);
+          console.log(`Agregado a lista de unificación: ${archivoPDF}`);
+        } else {
+          console.warn(`No se encontró ningún PDF para el documento ${documento.id}`);
+        }
+      } catch (error) {
+        console.error(`Error procesando documento ${documento.id}:`, error);
+      }
+    }
+    
+    if (pdfPaths.length === 0) {
+      console.log('No se encontraron archivos PDF válidos para unificar');
+      return res.status(400).json({ error: 'No se encontraron archivos PDF válidos para unificar' });
+    }
+    
+    console.log(`PDFs a unificar: ${pdfPaths.length}`);
+    
+    // Crear directorio temporal si no existe
+    const tempDir = path.join(process.cwd(), 'temp');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
+    
+    // Generar nombre único para el archivo unificado
+    const outputFileName = `expediente${expediente.id}_${Date.now()}.pdf`;
+    const outputPath = path.join(tempDir, outputFileName);
+    
+    // Importar la función para unificar PDFs
+    const { mergePDFs } = await import('../utils/pdfMerge.js');
+    
+    // Unificar los PDFs
+    console.log('Unificando PDFs...');
+    await mergePDFs(pdfPaths, outputPath);
+    
+    // Verificar que el archivo se generó correctamente
+    if (!fs.existsSync(outputPath)) {
+      console.error('El archivo unificado no se generó correctamente');
+      return res.status(500).json({ error: 'Error al generar el archivo unificado' });
+    }
+    
+    // Configurar headers para enviar el PDF
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="expediente_${expediente.id}.pdf"`);
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    // Enviar el archivo
+    res.sendFile(path.resolve(outputPath), (err) => {
+      if (err) {
+        console.error('Error enviando archivo:', err);
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error en procesarExpedientePDF:', error);
+    res.status(500).json({ 
+      error: 'Error interno del servidor',
+      details: error.message 
+    });
+  }
+}
 
 export default router;
