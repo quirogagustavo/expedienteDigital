@@ -76,14 +76,26 @@ psql -U expediente_user -d expediente_digital -h 127.0.0.1
 ### 4. Clonar el repositorio
 
 ```bash
-# Crear directorio
-sudo mkdir -p /var/www/expediente-digital
-sudo chown $USER:$USER /var/www/expediente-digital
+# Ir al directorio /var/www
+cd /var/www
+
+# Si el directorio ya existe, eliminarlo primero
+sudo rm -rf expediente-digital
 
 # Clonar desde GitHub
-git clone https://github.com/quirogagustavo/expedienteDigital.git /var/www/expediente-digital
+sudo git clone https://github.com/quirogagustavo/expedienteDigital.git expediente-digital
 
+# Dar permisos al usuario actual
+sudo chown -R $USER:$USER /var/www/expediente-digital
+
+# Entrar al directorio
+cd expediente-digital
+```
+
+**Nota:** Si ya tienes el repositorio clonado y solo quieres actualizar:
+```bash
 cd /var/www/expediente-digital
+git pull origin main
 ```
 
 ### 5. Configurar variables de entorno
