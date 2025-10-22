@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "pdf-merger-js": "^5.1.2"
+  }
+}

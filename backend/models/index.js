@@ -5,6 +5,10 @@ import Document from './Document.js';
 import Signature from './Signature.js';
 import sequelizeExtended, { initializeDefaultData } from './databaseExtended.js';
 
+// Importar oficina y otros modelos dependientes
+import createOficinaModel from './Oficina.js';
+import createWorkflowMovimientoModel from './WorkflowMovimiento.js';
+
 // Importar modelos de expedientes
 import createExpedienteModel from './Expediente.js';
 import createExpedienteDocumentoModel from './ExpedienteDocumento.js';
@@ -13,6 +17,10 @@ import createFirmaBatchModel from './FirmaBatch.js';
 // Importar modelos de firmas
 import createUsuarioFirmaModel from './UsuarioFirma.js';
 import createFirmaHistorialModel from './FirmaHistorial.js';
+
+// Crear modelos que no dependen de otros
+const Oficina = createOficinaModel(sequelize);
+const WorkflowMovimiento = createWorkflowMovimientoModel(sequelize);
 
 const Expediente = createExpedienteModel(sequelize);
 const ExpedienteDocumento = createExpedienteDocumentoModel(sequelize);

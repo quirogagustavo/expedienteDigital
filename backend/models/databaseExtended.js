@@ -1,7 +1,7 @@
 import { Sequelize } from 'sequelize';
 
 // Configuración de la base de datos
-const sequelize = new Sequelize('firma_digital', 'postgres', 'JulSanFed219$', {
+const sequelize = new Sequelize('expediente_digital', 'expediente_user', 'MMineria$2017', {
   host: 'localhost',
   dialect: 'postgres',
   logging: false, // Cambia a console.log para ver las consultas SQL

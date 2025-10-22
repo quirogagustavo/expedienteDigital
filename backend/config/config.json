@@ -1,0 +1,9 @@
+{
+  "production": {
+    "username": "expediente_user",
+    "password": "MMineria$2017",
+    "database": "expediente_digital",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  }
+}

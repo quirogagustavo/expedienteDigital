@@ -1,6 +1,6 @@
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('workflow_movimientos', {
+    await queryInterface.createTable('expediente_workflow', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -17,6 +17,16 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
+      oficina_actual_id: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        references: {
+          model: 'oficinas',
+          key: 'id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'SET NULL'
+      },
       oficina_origen_id: {
         type: Sequelize.INTEGER,
         allowNull: true,
@@ -27,45 +37,37 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'SET NULL'
       },
-      oficina_destino_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'oficinas',
-          key: 'id'
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
+      estado: {
+        type: Sequelize.ENUM(
+          'en_tramite',
+          'pendiente_revision',
+          'con_observaciones',
+          'aprobado',
+          'rechazado',
+          'archivado',
+          'derivado'
+        ),
+        defaultValue: 'en_tramite'
       },
-      estado_anterior: {
-        type: Sequelize.STRING,
+      prioridad: {
+        type: Sequelize.ENUM('baja', 'normal', 'alta', 'urgente'),
+        defaultValue: 'normal'
+      },
+      fecha_recepcion: {
+        type: Sequelize.DATE,
         allowNull: true
       },
-      estado_nuevo: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
-      motivo: {
-        type: Sequelize.TEXT,
+      fecha_vencimiento: {
+        type: Sequelize.DATE,
         allowNull: true
       },
       observaciones: {
         type: Sequelize.TEXT,
         allowNull: true
       },
-      usuario_movimiento: {
+      usuario_asignado: {
         type: Sequelize.STRING,
-        allowNull: false
-      },
-      fecha_movimiento: {
-        allowNull: false,
-        type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-      },
-      documentos_agregados: {
-        type: Sequelize.JSON,
-        allowNull: true,
-        comment: 'IDs de documentos agregados en este movimiento'
+        allowNull: true
       },
       created_at: {
         allowNull: false,
@@ -81,6 +83,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('workflow_movimientos');
+    await queryInterface.dropTable('expediente_workflow');
   }
 };

@@ -16,6 +16,7 @@
     "bcryptjs": "^3.0.2",
     "canvas": "^3.2.0",
     "cors": "^2.8.5",
+    "dotenv": "^16.1.4",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
@@ -29,5 +30,8 @@
     "sequelize": "^6.37.7",
     "sharp": "^0.34.4",
     "umzug": "^3.8.2"
+  },
+  "devDependencies": {
+    "sequelize-cli": "^6.6.0"
   }
 }
