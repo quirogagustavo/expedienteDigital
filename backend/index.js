@@ -79,8 +79,37 @@ async function startServer() {
     // Inicializar datos predeterminados para CA híbrida
     await initializeDefaultData();
 
+    // Configurar CORS basado en el entorno
+    const allowedOrigins = process.env.NODE_ENV === 'production'
+      ? [
+          'http://localhost:5174',        // Frontend desarrollo local
+          'http://localhost:5175',        // Frontend desarrollo local alternativo
+          process.env.FRONTEND_URL,       // Frontend producción (cuando lo despliegues)
+        ].filter(Boolean)  // Filtrar undefined si FRONTEND_URL no está definida
+      : [
+          'http://localhost:5174',
+          'http://localhost:5175',
+          'http://localhost:5173',
+        ];
+
     app.use(cors({
-      origin: ['http://localhost:5174', 'http://localhost:5175'],
+      origin: (origin, callback) => {
+        // Permitir peticiones sin origin (como curl, Postman, apps móviles)
+        if (!origin) return callback(null, true);
+        
+        // Permitir si está en la lista de orígenes permitidos
+        if (allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+        
+        // Permitir cualquier localhost en desarrollo
+        if (process.env.NODE_ENV !== 'production' && origin.startsWith('http://localhost:')) {
+          return callback(null, true);
+        }
+        
+        // Rechazar otros orígenes
+        callback(new Error('Not allowed by CORS'));
+      },
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true
