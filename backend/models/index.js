@@ -171,7 +171,23 @@ const defineAssociations = () => {
   });
 };
 
+
 export {
+  sequelize,
+  Usuario,
+  Certificado,
+  Document,
+  Signature,
+  Expediente,
+  ExpedienteDocumento,
+  FirmaBatch,
+  UsuarioFirma,
+  FirmaHistorial,
+  Oficina,
+  syncDatabase
+};
+
+export default {
   sequelize,
   Usuario,
   Certificado,
