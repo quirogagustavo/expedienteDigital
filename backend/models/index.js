@@ -37,9 +37,9 @@ const syncDatabase = async () => {
     // Definir asociaciones para modelos de expedientes
     defineAssociations();
     
-    // Sincronizar modelos básicos sin alterar estructura existente
-    await sequelize.sync({ force: false });
-    console.log('Tablas básicas sincronizadas correctamente.');
+    // NO sincronizar en producción - usar migraciones en su lugar
+    // await sequelize.sync({ force: false });
+    console.log('Modelos cargados correctamente (sin sync - usar migraciones).');
 
     // Agregar campos nuevos manualmente si no existen
     try {
@@ -53,15 +53,15 @@ const syncDatabase = async () => {
       console.log('Los campos de firma ya existen o hubo un error:', error.message);
     }
 
-    // Sincronizar modelos extendidos para CA híbrida
-    await sequelizeExtended.authenticate();
-    console.log('Conexión extendida a la base de datos establecida.');
+    // NO sincronizar en producción - las tablas ya existen vía migraciones
+    // await sequelizeExtended.authenticate();
+    // console.log('Conexión extendida a la base de datos establecida.');
     
-    await sequelizeExtended.sync({ force: false });
-    console.log('Tablas extendidas sincronizadas correctamente.');
+    // await sequelizeExtended.sync({ force: false });
+    // console.log('Tablas extendidas sincronizadas correctamente.');
     
     // Inicializar datos predeterminados
-    await initializeDefaultData();
+    // await initializeDefaultData();
   } catch (error) {
     console.error('Error al conectar con la base de datos:', error);
     throw error; // Re-lanzar el error para que el servidor no se inicie si la BD falla
