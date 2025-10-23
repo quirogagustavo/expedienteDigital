@@ -74,7 +74,7 @@ function printRoutes(app, prefix = '') {
 async function startServer() {
   try {
     // Inicializar base de datos
-    await syncDatabase();
+    // await syncDatabase(); // Comentado temporalmente - las tablas ya existen vía migraciones
 
     // Inicializar datos predeterminados para CA híbrida
     // await initializeDefaultData(); // Comentado temporalmente - las tablas ya existen
