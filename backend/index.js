@@ -77,7 +77,7 @@ async function startServer() {
     await syncDatabase();
 
     // Inicializar datos predeterminados para CA híbrida
-    await initializeDefaultData();
+    // await initializeDefaultData(); // Comentado temporalmente - las tablas ya existen
 
     // Configurar CORS basado en el entorno
     const allowedOrigins = process.env.NODE_ENV === 'production'

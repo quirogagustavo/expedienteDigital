@@ -16,7 +16,13 @@ const getDbConfig = (env) => {
     host: process.env[`${prefix}DB_HOST`] || process.env.DB_HOST || '127.0.0.1',
     dialect: process.env[`${prefix}DB_DIALECT`] || process.env.DB_DIALECT || 'postgres',
     port: process.env[`${prefix}DB_PORT`] ? parseInt(process.env[`${prefix}DB_PORT`], 10) : (process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : undefined),
-    logging: false
+    logging: false,
+    pool: {
+      max: 5,          // Máximo 5 conexiones por instancia
+      min: 0,          // Mínimo 0 conexiones
+      acquire: 30000,  // Tiempo máximo (ms) para obtener conexión
+      idle: 10000      // Tiempo máximo (ms) que una conexión puede estar idle antes de liberarse
+    }
   };
 };
 
