@@ -1,6 +1,6 @@
 
 import express from 'express';
-import { Oficina } from '../models/index.js';
+import { sequelize } from '../models/index.js';
 import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -10,10 +10,11 @@ const router = express.Router();
 // Obtener todas las oficinas (solo administradores)
 router.get('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const oficinas = await Oficina.findAll({
-      where: { activa: true },
-      order: [['nombre', 'ASC']]
-    });
+    const [oficinas] = await sequelize.query(`
+      SELECT * FROM oficinas 
+      WHERE activa = true 
+      ORDER BY nombre
+    `);
     res.json(oficinas);
   } catch (error) {
     console.error('Error al obtener oficinas:', error);
@@ -28,13 +29,12 @@ router.get('/disponibles/:oficina_actual_id', authenticateToken, async (req, res
     if (!oficina_actual_id || oficina_actual_id === 'undefined') {
       return res.status(400).json({ error: 'oficina_actual_id es requerida y válida' });
     }
-    const oficinas = await Oficina.findAll({
-      where: {
-        activa: true,
-        id: { [Oficina.sequelize.Op.ne]: oficina_actual_id }
-      },
-      attributes: ['id', 'nombre', 'descripcion'],
-      order: [['nombre', 'ASC']]
+    const [oficinas] = await sequelize.query(`
+      SELECT id, nombre, descripcion FROM oficinas 
+      WHERE activa = true AND id != :oficina_id
+      ORDER BY nombre
+    `, {
+      replacements: { oficina_id: oficina_actual_id }
     });
     res.json(oficinas);
   } catch (error) {
