@@ -182,5 +182,6 @@ export {
   FirmaBatch,
   UsuarioFirma,
   FirmaHistorial,
+  Oficina,
   syncDatabase
 };
