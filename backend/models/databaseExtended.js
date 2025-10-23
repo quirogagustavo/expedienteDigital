@@ -1,15 +1,5 @@
-import { Sequelize } from 'sequelize';
-
-// Configuración de la base de datos
-const sequelize = new Sequelize('expediente_digital', 'expediente_user', 'MMineria$2017', {
-  host: 'localhost',
-  dialect: 'postgres',
-  logging: false, // Cambia a console.log para ver las consultas SQL
-  define: {
-    timestamps: true, // Agrega createdAt y updatedAt automáticamente
-    underscored: true // Usa snake_case para nombres de columnas
-  }
-});
+// Reutilizar la instancia principal de sequelize en lugar de crear una nueva
+import sequelize from './database.js';
 
 // Importar modelos básicos
 import Usuario from './Usuario.js';

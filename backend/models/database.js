@@ -14,10 +14,17 @@ const DB_DIALECT = process.env.DB_DIALECT || 'postgres';
 const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASS, {
   host: DB_HOST,
   dialect: DB_DIALECT,
-  logging: console.log, // Ver las consultas SQL para debug
+  logging: false, // Deshabilitar logs SQL en producción
   define: {
     timestamps: true, // Agrega createdAt y updatedAt automáticamente
-    underscored: true // Usa snake_case para nombres de columnas
+    underscored: true, // Usa snake_case para nombres de columnas
+    freezeTableName: true // No pluralizar nombres de tablas automáticamente
+  },
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000
   }
 });
 
