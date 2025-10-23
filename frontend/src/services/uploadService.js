@@ -1,8 +1,11 @@
 import axios from 'axios';
 
+// Usar variable de entorno para el baseURL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+
 // Configurar la instancia de axios para las llamadas al backend
 const uploadService = axios.create({
-  baseURL: 'http://localhost:4000',
+  baseURL: API_BASE_URL,
   timeout: 30000, // 30 segundos para uploads
 });
 

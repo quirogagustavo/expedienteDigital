@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:4000';
+// Usar variable de entorno para el baseURL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
 // Configurar instancia de axios para autenticación
 const authService = axios.create({
