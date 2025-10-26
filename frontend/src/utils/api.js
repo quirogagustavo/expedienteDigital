@@ -1,8 +1,9 @@
 import axios from 'axios';
 
 // Configuración base de la API
+const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
 const api = axios.create({
-  baseURL: '/api', // Usar proxy de Vite para desarrollo
+  baseURL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
