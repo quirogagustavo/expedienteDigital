@@ -1,0 +1,86 @@
+{
+  // Excluir archivos de la búsqueda y del watcher
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/uploads": true,
+    "**/.git": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/*.log": true,
+    "**/temp": true,
+    "**/public/uploads": true,
+    "**/backend/uploads": true,
+    "**/backend/temp": true,
+    "**/backend/certificates": true,
+    "**/.DS_Store": true,
+    "**/nohup.out": true
+  },
+  
+  // Excluir de la búsqueda
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/uploads": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/*.log": true,
+    "**/temp": true,
+    "**/package-lock.json": true,
+    "**/.git": true
+  },
+  
+  // Excluir del file watcher (mejora performance)
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/uploads/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/*/**": true,
+    "**/*.log": true,
+    "**/temp/**": true
+  },
+  
+  // Configuración de TypeScript/JavaScript
+  "typescript.tsserver.maxTsServerMemory": 4096,
+  "typescript.disableAutomaticTypeAcquisition": true,
+  
+  // Configuración de ESLint
+  "eslint.workingDirectories": [
+    "./frontend",
+    "./backend"
+  ],
+  
+  // Configuración de Python
+  "python.analysis.exclude": [
+    "**/node_modules",
+    "**/.venv",
+    "**/uploads"
+  ],
+  
+  // Configuración de Git
+  "git.ignoreLimitWarning": true,
+  "git.autorefresh": false,
+  
+  // Performance general
+  "extensions.autoUpdate": false,
+  "files.autoSave": "onFocusChange",
+  "editor.formatOnSave": false,
+  
+  // Optimizaciones adicionales de performance
+  "javascript.updateImportsOnFileMove.enabled": "never",
+  "workbench.editor.limit.enabled": true,
+  "workbench.editor.limit.value": 10,
+  "workbench.editor.limit.perEditorGroup": true,
+  "editor.minimap.enabled": false,
+  "editor.smoothScrolling": false,
+  "editor.renderWhitespace": "none",
+  
+  // Copilot Chat optimizations
+  "github.copilot.chat.search.semanticTextResults": 5,
+  "github.copilot.chat.workspaceContext": "limited",
+  
+  // Reducir carga de extensiones
+  "extensions.ignoreRecommendations": true,
+  "telemetry.telemetryLevel": "off"
+}

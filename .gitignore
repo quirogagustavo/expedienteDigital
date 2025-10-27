@@ -34,7 +34,9 @@ ehthumbs.db
 Thumbs.db
 
 # IDE files
-.vscode/
+.vscode/launch.json
+.vscode/tasks.json
+.vscode/*.code-workspace
 .idea/
 *.swp
 *.swo
