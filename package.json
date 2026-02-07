@@ -1,5 +1,10 @@
 {
+  "type": "module",
+  "scripts": {
+    "docs:generate": "node scripts/generateApiDocs.js"
+  },
   "dependencies": {
+    "marked": "^17.0.1",
     "pdf-merger-js": "^5.1.2"
   }
 }

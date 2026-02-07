@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(node convert.js:*)",
+      "Bash(wc:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(npm run docs:generate:*)"
+    ],
+    "additionalDirectories": [
+      "c:\\wamp64\\www\\expedienteDigital\\scripts"
+    ]
+  }
+}

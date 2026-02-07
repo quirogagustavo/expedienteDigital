@@ -1,0 +1,4520 @@
+{
+  "info": {
+    "name": "Sistema de Expediente Digital API",
+    "description": "API completa para gestión de expedientes digitales con firma electrónica y workflow entre oficinas",
+    "version": "1.0.0",
+    "baseUrl": {
+      "development": "http://localhost:4000",
+      "production": "http://10.64.160.220:4000"
+    },
+    "authentication": {
+      "type": "Bearer Token (JWT)",
+      "header": "Authorization: Bearer {{token}}",
+      "tokenExpiration": "24h"
+    }
+  },
+  "modules": [
+    {
+      "name": "Administración",
+      "description": "Gestión de usuarios y configuración del sistema",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/usuarios",
+          "module": "Administración",
+          "sourceFile": "admin.js",
+          "summary": "Obtener todos los usuarios con información de oficinas",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/usuarios",
+          "module": "Administración",
+          "sourceFile": "admin.js",
+          "summary": "Crear nuevo usuario",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "username",
+                "hasDefault": false
+              },
+              {
+                "name": "nombre_completo",
+                "hasDefault": false
+              },
+              {
+                "name": "email",
+                "hasDefault": false
+              },
+              {
+                "name": "password",
+                "hasDefault": false
+              },
+              {
+                "name": "rol_usuario",
+                "hasDefault": false
+              },
+              {
+                "name": "oficina_id",
+                "hasDefault": false
+              }
+            ]
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/usuarios/:id",
+          "module": "Administración",
+          "sourceFile": "admin.js",
+          "summary": "Actualizar usuario",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "nombre_completo",
+                "hasDefault": false
+              },
+              {
+                "name": "email",
+                "hasDefault": false
+              },
+              {
+                "name": "rol_usuario",
+                "hasDefault": false
+              },
+              {
+                "name": "oficina_id",
+                "hasDefault": false
+              }
+            ]
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/usuarios/:id",
+          "module": "Administración",
+          "sourceFile": "admin.js",
+          "summary": "Eliminar usuario",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/usuarios/:id/password",
+          "module": "Administración",
+          "sourceFile": "admin.js",
+          "summary": "Eliminar el usuario",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "password",
+                "hasDefault": false
+              }
+            ]
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Certificados",
+      "description": "Gestión de certificados digitales (P12/PFX e internos)",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/my-certificates",
+          "module": "Certificados",
+          "sourceFile": "certificados.js",
+          "summary": "Validar tipos de archivo permitidos para certificados",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/import-p12",
+          "module": "Certificados",
+          "sourceFile": "certificados.js",
+          "summary": "POST /import-p12",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": true,
+          "uploadField": "certificate",
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "password",
+                "hasDefault": false
+              }
+            ]
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/generate-internal",
+          "module": "Certificados",
+          "sourceFile": "certificados.js",
+          "summary": "POST /generate-internal",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/:id/activate",
+          "module": "Certificados",
+          "sourceFile": "certificados.js",
+          "summary": "POST /:id/activate",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/certificates",
+          "module": "Certificados",
+          "sourceFile": "certificateRoutes.js",
+          "summary": "Rutas básicas para certificados - versión simplificada",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/request-certificate",
+          "module": "Certificados",
+          "sourceFile": "certificateRoutes.js",
+          "summary": "Resto de rutas comentadas temporalmente para funcionalidad básica",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "certificateTypeId",
+                "hasDefault": false
+              },
+              {
+                "name": "certificateAuthorityId",
+                "hasDefault": false
+              },
+              {
+                "name": "identityData",
+                "hasDefault": false
+              },
+              {
+                "name": "businessData",
+                "hasDefault": false
+              }
+            ]
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/certificate/:id/status",
+          "module": "Certificados",
+          "sourceFile": "certificateRoutes.js",
+          "summary": "GET /api/certificate/:id/status - Verificar estado de un certificado",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/request-government-certificate",
+          "module": "Certificados",
+          "sourceFile": "certificateRoutes.js",
+          "summary": "POST /api/request-government-certificate - Solicitar certificado gubernamental",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/certificate-types",
+          "module": "Certificados",
+          "sourceFile": "certificateRoutesSimple.js",
+          "summary": "GET /api/certificate-types - Obtener tipos de certificados disponibles",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/certificate-authorities",
+          "module": "Certificados",
+          "sourceFile": "certificateRoutesSimple.js",
+          "summary": "GET /api/certificate-authorities - Obtener autoridades certificadoras",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/request-government",
+          "module": "Certificados",
+          "sourceFile": "governmentCertificateRoutes.js",
+          "summary": "5MB máximo",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "documentos_identidad",
+                "hasDefault": false
+              }
+            ]
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/verify/:certificadoId",
+          "module": "Certificados",
+          "sourceFile": "governmentCertificateRoutes.js",
+          "summary": "Endpoint para verificar estado de certificado gubernamental",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "certificadoId",
+              "type": "string",
+              "required": true,
+              "description": "ID de certificadoId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/my-government-certificates",
+          "module": "Certificados",
+          "sourceFile": "governmentCertificateRoutes.js",
+          "summary": "Endpoint para obtener certificados gubernamentales del usuario",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/activate/:certificadoId",
+          "module": "Certificados",
+          "sourceFile": "governmentCertificateRoutes.js",
+          "summary": "Endpoint para activar certificado después de validación administrativa",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "certificadoId",
+              "type": "string",
+              "required": true,
+              "description": "ID de certificadoId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/request-internal",
+          "module": "Certificados",
+          "sourceFile": "internalCertificateRoutes.js",
+          "summary": "Rutas para Gestión de Certificados Internos",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/renew/:certificadoId",
+          "module": "Certificados",
+          "sourceFile": "internalCertificateRoutes.js",
+          "summary": "Endpoint para renovar certificado",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "certificadoId",
+              "type": "string",
+              "required": true,
+              "description": "ID de certificadoId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/check-status",
+          "module": "Certificados",
+          "sourceFile": "internalCertificateRoutes.js",
+          "summary": "Endpoint para verificar estado de certificados automáticamente",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/smart-suggest",
+          "module": "Certificados",
+          "sourceFile": "smartCertificateRoutes.js",
+          "summary": "Ruta para Auto-detección Inteligente de Certificados",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "tipoDocumento",
+                "hasDefault": false
+              },
+              {
+                "name": "userId",
+                "hasDefault": false
+              }
+            ]
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/confirm-signature",
+          "module": "Certificados",
+          "sourceFile": "smartCertificateRoutes.js",
+          "summary": "Log de auditoría para gobierno",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "documentoId",
+                "hasDefault": false
+              },
+              {
+                "name": "certificadoTipo",
+                "hasDefault": false
+              },
+              {
+                "name": "confirmacionExplicita",
+                "hasDefault": false
+              }
+            ]
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/my-signatures",
+          "module": "Certificados",
+          "sourceFile": "smartCertificateRoutes.js",
+          "summary": "Endpoint para obtener historial de firmas del usuario (transparencia gubernamental)",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/certificados",
+          "module": "Certificados",
+          "sourceFile": "index.js",
+          "summary": "app.use('/api/internal-certificates', internalCertificateRoutes); // Comentado temporalmente",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Oficinas",
+      "description": "Administración de oficinas del sistema",
+      "routes": [
+        {
+          "method": "DELETE",
+          "path": "/:id",
+          "module": "Oficinas",
+          "sourceFile": "oficinas.js",
+          "summary": "Desactivar oficina (solo administradores)",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": true,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "403": {
+              "description": "Sin permisos de administrador",
+              "example": {
+                "error": "Acceso denegado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/",
+          "module": "Oficinas",
+          "sourceFile": "oficinas.js",
+          "summary": "Crear nueva oficina (solo administradores)",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": true,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "nombre",
+                "hasDefault": false
+              },
+              {
+                "name": "descripcion",
+                "hasDefault": false
+              },
+              {
+                "name": "codigo",
+                "hasDefault": false
+              },
+              {
+                "name": "responsable",
+                "hasDefault": false
+              },
+              {
+                "name": "email",
+                "hasDefault": false
+              },
+              {
+                "name": "telefono",
+                "hasDefault": false
+              }
+            ]
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "403": {
+              "description": "Sin permisos de administrador",
+              "example": {
+                "error": "Acceso denegado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/",
+          "module": "Oficinas",
+          "sourceFile": "oficinas.js",
+          "summary": "CRUD de oficinas",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": true,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "403": {
+              "description": "Sin permisos de administrador",
+              "example": {
+                "error": "Acceso denegado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/:id",
+          "module": "Oficinas",
+          "sourceFile": "oficinas.js",
+          "summary": "Obtener una oficina por ID (solo administradores)",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": true,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "nombre",
+                "hasDefault": false
+              },
+              {
+                "name": "descripcion",
+                "hasDefault": false
+              },
+              {
+                "name": "codigo",
+                "hasDefault": false
+              },
+              {
+                "name": "responsable",
+                "hasDefault": false
+              },
+              {
+                "name": "email",
+                "hasDefault": false
+              },
+              {
+                "name": "telefono",
+                "hasDefault": false
+              }
+            ]
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "403": {
+              "description": "Sin permisos de administrador",
+              "example": {
+                "error": "Acceso denegado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/disponibles/:oficina_actual_id",
+          "module": "Oficinas",
+          "sourceFile": "oficinas.js",
+          "summary": "Obtener oficinas disponibles para envío (excluyendo la actual del usuario) - Requiere autenticación",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "oficina_actual_id",
+              "type": "string",
+              "required": true,
+              "description": "ID de oficina_actual_id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/:id",
+          "module": "Oficinas",
+          "sourceFile": "oficinas.js",
+          "summary": "Código único duplicado",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": true,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "nombre",
+                "hasDefault": false
+              },
+              {
+                "name": "descripcion",
+                "hasDefault": false
+              },
+              {
+                "name": "codigo",
+                "hasDefault": false
+              },
+              {
+                "name": "responsable",
+                "hasDefault": false
+              },
+              {
+                "name": "email",
+                "hasDefault": false
+              },
+              {
+                "name": "telefono",
+                "hasDefault": false
+              },
+              {
+                "name": "activa",
+                "hasDefault": false
+              }
+            ]
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "403": {
+              "description": "Sin permisos de administrador",
+              "example": {
+                "error": "Acceso denegado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/:id/expedientes",
+          "module": "Oficinas",
+          "sourceFile": "oficinas.js",
+          "summary": "Obtener expedientes de una oficina (solo administradores)",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": true,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "403": {
+              "description": "Sin permisos de administrador",
+              "example": {
+                "error": "Acceso denegado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Expedientes",
+      "description": "CRUD completo de expedientes digitales y documentos",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/:id/firmas",
+          "module": "Expedientes",
+          "sourceFile": "expedientes.js",
+          "summary": "Obtener detalles completos del expediente con firmas (DEBE IR ANTES QUE /:id)",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/:id/documentos/:docId/verificar-firma",
+          "module": "Expedientes",
+          "sourceFile": "expedientes.js",
+          "summary": "Verificar firma digital de un documento",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            },
+            {
+              "name": "docId",
+              "type": "string",
+              "required": true,
+              "description": "ID de docId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/:id/documentos/:docId/archivo",
+          "module": "Expedientes",
+          "sourceFile": "expedientes.js",
+          "summary": "Servir archivo de documento para visualización/descarga",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            },
+            {
+              "name": "docId",
+              "type": "string",
+              "required": true,
+              "description": "ID de docId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/:id/documentos",
+          "module": "Expedientes",
+          "sourceFile": "expedientes.js",
+          "summary": "Agregar documento a expediente",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": true,
+          "uploadField": "archivo",
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "documento_nombre",
+                "hasDefault": false
+              },
+              {
+                "name": "numero_foja",
+                "hasDefault": false
+              }
+            ]
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "PATCH",
+          "path": "/:id/estado",
+          "module": "Expedientes",
+          "sourceFile": "expedientes.js",
+          "summary": "Actualizar estado del expediente",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "estado",
+                "hasDefault": false
+              },
+              {
+                "name": "oficina_destino_id",
+                "hasDefault": false
+              }
+            ]
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/:id/documentos/:docId",
+          "module": "Expedientes",
+          "sourceFile": "expedientes.js",
+          "summary": "Eliminar documento del expediente",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            },
+            {
+              "name": "docId",
+              "type": "string",
+              "required": true,
+              "description": "ID de docId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/:id/documentos/:docId/firmar",
+          "module": "Expedientes",
+          "sourceFile": "expedientes.js",
+          "summary": "Firmar documento",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            },
+            {
+              "name": "docId",
+              "type": "string",
+              "required": true,
+              "description": "ID de docId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/:id/enviar",
+          "module": "Expedientes",
+          "sourceFile": "expedientes.js",
+          "summary": "Enviar expediente a otra oficina",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "oficina_destino_id",
+                "hasDefault": false
+              },
+              {
+                "name": "comentario",
+                "hasDefault": false
+              }
+            ]
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/:id/preview",
+          "module": "Expedientes",
+          "sourceFile": "expedientes.js",
+          "summary": "Obtener previsualización completa del expediente",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/:id/merged-pdf",
+          "module": "Expedientes",
+          "sourceFile": "expedientes.js",
+          "summary": "Generar y servir PDF unificado del expediente",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Firmas",
+      "description": "Firma digital de documentos y gestión de firmas visuales",
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/:id/firmar",
+          "module": "Firmas",
+          "sourceFile": "firmaDocumentos.js",
+          "summary": "Firmar documento individual",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "signatureData",
+                "hasDefault": false
+              },
+              {
+                "name": "certificateData",
+                "hasDefault": false
+              }
+            ]
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/batch/:expedienteId",
+          "module": "Firmas",
+          "sourceFile": "firmaDocumentos.js",
+          "summary": "Firma batch de expediente",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "expedienteId",
+              "type": "string",
+              "required": true,
+              "description": "ID de expedienteId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "signatureData",
+                "hasDefault": false
+              },
+              {
+                "name": "certificateData",
+                "hasDefault": false
+              },
+              {
+                "name": "tipoFirma",
+                "hasDefault": true,
+                "defaultValue": "'batch'"
+              }
+            ]
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/:id/verificar",
+          "module": "Firmas",
+          "sourceFile": "firmaDocumentos.js",
+          "summary": "Verificar firma de documento",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/expediente/:expedienteId/historial",
+          "module": "Firmas",
+          "sourceFile": "firmaDocumentos.js",
+          "summary": "Obtener historial de firmas del expediente",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "expedienteId",
+              "type": "string",
+              "required": true,
+              "description": "ID de expedienteId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/admin/usuarios/:id/firmas",
+          "module": "Firmas",
+          "sourceFile": "firmas.js",
+          "summary": "========================================",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": true,
+          "uploadField": "firma",
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/admin/usuarios/:id/firmas",
+          "module": "Firmas",
+          "sourceFile": "firmas.js",
+          "summary": "========================================",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": true,
+          "uploadField": "firma",
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/admin/usuarios/:id/firmas/:firmaId/imagen",
+          "module": "Firmas",
+          "sourceFile": "firmas.js",
+          "summary": "GET /admin/usuarios/:id/firmas/:firmaId/imagen",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            },
+            {
+              "name": "firmaId",
+              "type": "string",
+              "required": true,
+              "description": "ID de firmaId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/admin/usuarios/:id/firmas/:firmaId/predeterminada",
+          "module": "Firmas",
+          "sourceFile": "firmas.js",
+          "summary": "PUT /admin/usuarios/:id/firmas/:firmaId/predeterminada",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            },
+            {
+              "name": "firmaId",
+              "type": "string",
+              "required": true,
+              "description": "ID de firmaId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/admin/usuarios/:id/firmas/:firmaId",
+          "module": "Firmas",
+          "sourceFile": "firmas.js",
+          "summary": "DELETE /admin/usuarios/:id/firmas/:firmaId",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": true,
+          "uploadField": "firma",
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            },
+            {
+              "name": "firmaId",
+              "type": "string",
+              "required": true,
+              "description": "ID de firmaId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/usuarios/mi-firma",
+          "module": "Firmas",
+          "sourceFile": "firmas.js",
+          "summary": "========================================",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": true,
+          "uploadField": "firma",
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "texto",
+                "hasDefault": false
+              },
+              {
+                "name": "estilo",
+                "hasDefault": true,
+                "defaultValue": "'elegante'"
+              }
+            ]
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/usuarios/mi-firma",
+          "module": "Firmas",
+          "sourceFile": "firmas.js",
+          "summary": "========================================",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": true,
+          "uploadField": "firma",
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "texto",
+                "hasDefault": false
+              },
+              {
+                "name": "estilo",
+                "hasDefault": true,
+                "defaultValue": "'elegante'"
+              }
+            ]
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/usuarios/generar-firma-digital",
+          "module": "Firmas",
+          "sourceFile": "firmas.js",
+          "summary": "POST /usuarios/generar-firma-digital",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "texto",
+                "hasDefault": false
+              },
+              {
+                "name": "estilo",
+                "hasDefault": true,
+                "defaultValue": "'elegante'"
+              }
+            ]
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/usuarios/mi-firma-digital",
+          "module": "Firmas",
+          "sourceFile": "firmas.js",
+          "summary": "GET /usuarios/mi-firma-digital",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/usuarios/mi-firma-digital/imagen",
+          "module": "Firmas",
+          "sourceFile": "firmas.js",
+          "summary": "GET /usuarios/mi-firma-digital/imagen",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/usuarios/mi-firma-digital/:id",
+          "module": "Firmas",
+          "sourceFile": "firmas.js",
+          "summary": "DELETE /usuarios/mi-firma-digital/:id",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/usuarios/mi-firma/imagen",
+          "module": "Firmas",
+          "sourceFile": "firmas.js",
+          "summary": "GET /usuarios/mi-firma/imagen",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/usuarios/mi-firma/:id",
+          "module": "Firmas",
+          "sourceFile": "firmas.js",
+          "summary": "DELETE /usuarios/mi-firma/:id",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/firmas/tipos-permitidos",
+          "module": "Firmas",
+          "sourceFile": "firmas.js",
+          "summary": "========================================",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": true,
+          "uploadField": "firma",
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/firmas/validar",
+          "module": "Firmas",
+          "sourceFile": "firmas.js",
+          "summary": "POST /firmas/validar",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": true,
+          "uploadField": "firma",
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/history",
+          "module": "Firmas",
+          "sourceFile": "signatureRoutes.js",
+          "summary": "GET /api/signatures/history - Obtener historial de firmas del usuario",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/verify/:id",
+          "module": "Firmas",
+          "sourceFile": "signatureRoutes.js",
+          "summary": "GET /api/signatures/verify/:id - Verificar estado de una firma específica",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "id",
+              "type": "string",
+              "required": true,
+              "description": "ID de id"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/sign",
+          "module": "Firmas",
+          "sourceFile": "index.js",
+          "summary": "Endpoint para recibir archivo y simular firma digital",
+          "description": "Firma un documento con certificado digital (interno o gubernamental) del usuario",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": true,
+          "uploadField": "document",
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "tipo_documento",
+                "hasDefault": false
+              },
+              {
+                "name": "certificate_type",
+                "hasDefault": false
+              },
+              {
+                "name": "aplicar_firma_visual",
+                "hasDefault": false
+              },
+              {
+                "name": "posicion_firma",
+                "hasDefault": false
+              }
+            ]
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/verify",
+          "module": "Firmas",
+          "sourceFile": "index.js",
+          "summary": "Endpoint para validar la firma digital",
+          "description": "Verifica la validez de una firma digital de un documento",
+          "auth": false,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": true,
+          "uploadField": "document",
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "signature",
+                "hasDefault": false
+              },
+              {
+                "name": "publicKeyPem",
+                "hasDefault": false
+              }
+            ]
+          },
+          "requestBody": null,
+          "responses": {
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Autenticación",
+      "description": "Endpoints para login y gestión de tokens JWT",
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/login",
+          "module": "Autenticación",
+          "sourceFile": "login.js",
+          "summary": "Endpoint de login: recibe username/email y password, devuelve token JWT",
+          "description": "",
+          "auth": false,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "username",
+                "hasDefault": false
+              },
+              {
+                "name": "email",
+                "hasDefault": false
+              },
+              {
+                "name": "password",
+                "hasDefault": false
+              }
+            ]
+          },
+          "requestBody": {
+            "contentType": "application/json",
+            "example": {
+              "username": "admin",
+              "password": "admin123"
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Login exitoso",
+              "example": {
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "user": {
+                  "id": 1,
+                  "username": "admin",
+                  "email": "admin@example.com"
+                }
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/register",
+          "module": "Autenticación",
+          "sourceFile": "index.js",
+          "summary": "Registrar nuevo usuario (público)",
+          "description": "Permite el auto-registro de nuevos usuarios sin autenticación previa",
+          "auth": false,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "requestBody": {
+            "contentType": "application/json",
+            "example": {
+              "username": "juan.perez",
+              "password": "MiPassword123!",
+              "nombre_completo": "Juan Pérez",
+              "email": "juan.perez@example.com",
+              "rol_usuario": "empleado_interno"
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Usuario creado exitosamente",
+              "example": {
+                "message": "Usuario creado exitosamente",
+                "usuario": {
+                  "id": 5,
+                  "username": "juan.perez",
+                  "nombre_completo": "Juan Pérez",
+                  "email": "juan.perez@example.com",
+                  "rol_usuario": "empleado_interno"
+                }
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Usuarios",
+      "description": "Gestión de usuarios, firmas manuscritas y certificados",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/mi-firma",
+          "module": "Usuarios",
+          "sourceFile": "usuarios.js",
+          "summary": "Obtener firma manuscrita del usuario",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/mi-firma-digital",
+          "module": "Usuarios",
+          "sourceFile": "usuarios.js",
+          "summary": "Obtener firma manuscrita del usuario",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/mis-certificados",
+          "module": "Usuarios",
+          "sourceFile": "usuarios.js",
+          "summary": "Por ahora retornamos una respuesta vacía pero válida",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/certificados-publicos",
+          "module": "Usuarios",
+          "sourceFile": "usuarios.js",
+          "summary": "Ruta pública para desarrollo - obtener todos los certificados sin autenticación",
+          "description": "",
+          "auth": false,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/profile",
+          "module": "Usuarios",
+          "sourceFile": "index.js",
+          "summary": "Rutas de autenticación",
+          "description": "Retorna información del usuario actual basándose en el token JWT",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Workflow",
+      "description": "Envío de expedientes entre oficinas y cambios de estado",
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/:expedienteId/enviar-a-oficina",
+          "module": "Workflow",
+          "sourceFile": "workflow.js",
+          "summary": "Enviar expediente a oficina",
+          "description": "",
+          "auth": false,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "expedienteId",
+              "type": "string",
+              "required": true,
+              "description": "ID de expedienteId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "oficina_destino_id",
+                "hasDefault": false
+              },
+              {
+                "name": "motivo",
+                "hasDefault": false
+              },
+              {
+                "name": "observaciones",
+                "hasDefault": false
+              },
+              {
+                "name": "usuario_movimiento",
+                "hasDefault": false
+              },
+              {
+                "name": "prioridad",
+                "hasDefault": true,
+                "defaultValue": "'normal'"
+              }
+            ]
+          },
+          "requestBody": null,
+          "responses": {
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/:expedienteId/cambiar-estado",
+          "module": "Workflow",
+          "sourceFile": "workflow.js",
+          "summary": "Cambiar estado de expediente",
+          "description": "",
+          "auth": false,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "expedienteId",
+              "type": "string",
+              "required": true,
+              "description": "ID de expedienteId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "nuevo_estado",
+                "hasDefault": false
+              },
+              {
+                "name": "observaciones",
+                "hasDefault": false
+              },
+              {
+                "name": "usuario_movimiento",
+                "hasDefault": false
+              }
+            ]
+          },
+          "responses": {
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/:expedienteId/agregar-documento",
+          "module": "Workflow",
+          "sourceFile": "workflow.js",
+          "summary": "Agregar documento a expediente (desde oficina)",
+          "description": "",
+          "auth": false,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": true,
+          "uploadField": "documento",
+          "pathParams": [
+            {
+              "name": "expedienteId",
+              "type": "string",
+              "required": true,
+              "description": "ID de expedienteId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "documento_nombre",
+                "hasDefault": false
+              },
+              {
+                "name": "documento_tipo",
+                "hasDefault": false
+              },
+              {
+                "name": "oficina_id",
+                "hasDefault": false
+              },
+              {
+                "name": "usuario_agregado",
+                "hasDefault": false
+              },
+              {
+                "name": "observaciones",
+                "hasDefault": false
+              }
+            ]
+          },
+          "requestBody": null,
+          "responses": {
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/:expedienteId/historial",
+          "module": "Workflow",
+          "sourceFile": "workflow.js",
+          "summary": "Obtener historial de movimientos de un expediente",
+          "description": "",
+          "auth": false,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "expedienteId",
+              "type": "string",
+              "required": true,
+              "description": "ID de expedienteId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/:expedienteId/estado-workflow",
+          "module": "Workflow",
+          "sourceFile": "workflow.js",
+          "summary": "Obtener estado actual del workflow de un expediente",
+          "description": "",
+          "auth": false,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "expedienteId",
+              "type": "string",
+              "required": true,
+              "description": "ID de expedienteId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/:expedienteId/enviar",
+          "module": "Workflow",
+          "sourceFile": "workflow.js",
+          "summary": "Alias para compatibilidad con el frontend - enviar expediente",
+          "description": "",
+          "auth": false,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "expedienteId",
+              "type": "string",
+              "required": true,
+              "description": "ID de expedienteId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": true,
+            "fields": [
+              {
+                "name": "oficina_destino_id",
+                "hasDefault": false
+              },
+              {
+                "name": "prioridad",
+                "hasDefault": true,
+                "defaultValue": "'normal'"
+              },
+              {
+                "name": "motivo",
+                "hasDefault": false
+              },
+              {
+                "name": "observaciones",
+                "hasDefault": false
+              }
+            ]
+          },
+          "requestBody": null,
+          "responses": {
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "commonErrors": {
+    "401": "No autenticado - Token requerido o inválido",
+    "403": "Sin permisos - Requiere rol de administrador",
+    "404": "Recurso no encontrado",
+    "500": "Error interno del servidor"
+  },
+  "models": {
+    "Certificado": {
+      "tableName": "Certificado",
+      "description": "",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "primaryKey": true,
+          "autoIncrement": true
+        },
+        "nombre_certificado": {
+          "type": "string"
+        },
+        "certificado_pem": {
+          "type": "string",
+          "required": true
+        },
+        "clave_privada_pem": {
+          "type": "string"
+        },
+        "fecha_emision": {
+          "type": "string (date-time)"
+        },
+        "fecha_expiracion": {
+          "type": "string (date-time)"
+        },
+        "activo": {
+          "type": "boolean",
+          "defaultValue": "true"
+        },
+        "status": {
+          "type": "string (enum)",
+          "defaultValue": "active'",
+          "enum": []
+        },
+        "validation_data": {
+          "type": "object"
+        },
+        "serial_number": {
+          "type": "string"
+        },
+        "issuer_dn": {
+          "type": "string"
+        },
+        "subject_dn": {
+          "type": "string"
+        },
+        "tipo": {
+          "type": "string (enum)",
+          "defaultValue": "internal'",
+          "enum": []
+        },
+        "numero_serie": {
+          "type": "string"
+        },
+        "emisor": {
+          "type": "string"
+        },
+        "clave_publica_pem": {
+          "type": "string"
+        }
+      }
+    },
+    "CertificateAuthority": {
+      "tableName": "CertificateAuthority",
+      "description": "",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "primaryKey": true,
+          "autoIncrement": true
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "country": {
+          "type": "string",
+          "required": true
+        },
+        "type": {
+          "type": "string (enum)",
+          "required": true,
+          "enum": []
+        },
+        "api_endpoint": {
+          "type": "string"
+        },
+        "api_key": {
+          "type": "string"
+        },
+        "is_trusted": {
+          "type": "boolean",
+          "defaultValue": "false // Indicador de confianza (gubernamental"
+        },
+        "is_active": {
+          "type": "boolean",
+          "defaultValue": "true"
+        }
+      }
+    },
+    "CertificateType": {
+      "tableName": "CertificateType",
+      "description": "",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "primaryKey": true,
+          "autoIncrement": true
+        },
+        "name": {
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        "description": {
+          "type": "string",
+          "required": true
+        },
+        "validity_level": {
+          "type": "string (enum)",
+          "required": true,
+          "enum": []
+        },
+        "processing_time": {
+          "type": "string",
+          "required": true
+        },
+        "requires_identity_verification": {
+          "type": "boolean",
+          "defaultValue": "false"
+        },
+        "is_active": {
+          "type": "boolean",
+          "defaultValue": "true"
+        }
+      }
+    },
+    "Document": {
+      "tableName": "Document",
+      "description": "",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "primaryKey": true,
+          "autoIncrement": true
+        },
+        "nombre_documento": {
+          "type": "string",
+          "required": true
+        },
+        "tipo_documento": {
+          "type": "string (enum)",
+          "required": true,
+          "description": "oficial: requiere firma gubernamental, no_oficial: permite firma local",
+          "enum": [
+            "oficial",
+            "no_oficial"
+          ]
+        },
+        "requiere_firma_gubernamental": {
+          "type": "boolean",
+          "required": true,
+          "defaultValue": "false"
+        },
+        "descripcion": {
+          "type": "string"
+        },
+        "ruta_archivo": {
+          "type": "string"
+        },
+        "hash_documento": {
+          "type": "string"
+        },
+        "estado_firma": {
+          "type": "string (enum)",
+          "required": true,
+          "defaultValue": "sin_firmar'",
+          "enum": [
+            "sin_firmar",
+            "firmado_local",
+            "firmado_gubernamental"
+          ]
+        },
+        "expediente_id": {
+          "type": "string",
+          "description": "ID del expediente al que pertenece este documento"
+        },
+        "usuario_id": {
+          "type": "integer",
+          "required": true
+        },
+        "fecha_creacion": {
+          "type": "string (date-time)",
+          "required": true,
+          "defaultValue": "DataTypes.NOW"
+        },
+        "fecha_firma": {
+          "type": "string (date-time)"
+        }
+      }
+    },
+    "Expediente": {
+      "tableName": "Expediente",
+      "description": "",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "primaryKey": true,
+          "autoIncrement": true
+        },
+        "numero_expediente": {
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        "titulo": {
+          "type": "string",
+          "required": true
+        },
+        "descripcion": {
+          "type": "string"
+        },
+        "estado": {
+          "type": "string (enum)",
+          "defaultValue": "borrador'",
+          "enum": [
+            "borrador",
+            "en_proceso",
+            "consolidado",
+            "cerrado"
+          ]
+        },
+        "tipo_expediente": {
+          "type": "string (enum)",
+          "defaultValue": "administrativo'",
+          "enum": [
+            "licitacion",
+            "contratacion",
+            "administrativo",
+            "juridico",
+            "tecnico",
+            "otro"
+          ]
+        },
+        "prioridad": {
+          "type": "string (enum)",
+          "defaultValue": "normal'",
+          "enum": [
+            "baja",
+            "normal",
+            "alta",
+            "urgente"
+          ]
+        },
+        "fecha_creacion": {
+          "type": "string (date-time)",
+          "defaultValue": "DataTypes.NOW"
+        },
+        "fecha_consolidacion": {
+          "type": "string (date-time)"
+        },
+        "fecha_cierre": {
+          "type": "string (date-time)"
+        },
+        "usuario_responsable": {
+          "type": "integer",
+          "required": true
+        },
+        "reparticion": {
+          "type": "string",
+          "required": true
+        },
+        "archivo_consolidado": {
+          "type": "string",
+          "description": "Ruta del PDF consolidado final"
+        },
+        "hash_consolidado": {
+          "type": "string",
+          "description": "Hash SHA-256 del expediente consolidado"
+        },
+        "metadatos": {
+          "type": "object",
+          "description": "Información adicional específica del tipo de expediente"
+        },
+        "observaciones": {
+          "type": "string"
+        },
+        "oficina_actual_id": {
+          "type": "integer"
+        },
+        "estado_workflow": {
+          "type": "string (enum)",
+          "defaultValue": "iniciado'",
+          "enum": [
+            "iniciado",
+            "en_tramite",
+            "pendiente_revision",
+            "con_observaciones",
+            "aprobado",
+            "rechazado",
+            "archivado"
+          ]
+        }
+      }
+    },
+    "ExpedienteDocumento": {
+      "tableName": "ExpedienteDocumento",
+      "description": "",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "primaryKey": true,
+          "autoIncrement": true
+        },
+        "expediente_id": {
+          "type": "integer",
+          "required": true
+        },
+        "numero_foja": {
+          "type": "integer",
+          "required": true,
+          "description": "Número de foja dentro del expediente"
+        },
+        "foja_inicial": {
+          "type": "integer",
+          "description": "Foja inicial del documento en el expediente"
+        },
+        "foja_final": {
+          "type": "integer",
+          "description": "Foja final del documento en el expediente"
+        },
+        "cantidad_paginas": {
+          "type": "integer",
+          "defaultValue": "1",
+          "description": "Cantidad de páginas del documento PDF"
+        },
+        "documento_nombre": {
+          "type": "string",
+          "required": true
+        },
+        "documento_tipo": {
+          "type": "string (enum)",
+          "required": true,
+          "enum": [
+            "iniciacion",
+            "informe",
+            "dictamen",
+            "resolucion",
+            "anexo",
+            "notificacion",
+            "otro"
+          ]
+        },
+        "archivo_path": {
+          "type": "string",
+          "required": true,
+          "description": "Ruta del archivo original"
+        },
+        "archivo_firmado_path": {
+          "type": "string",
+          "description": "Ruta del archivo firmado"
+        },
+        "hash_documento": {
+          "type": "string",
+          "required": true,
+          "description": "Hash SHA-256 del documento original"
+        },
+        "orden_secuencial": {
+          "type": "integer",
+          "required": true,
+          "description": "Orden dentro del expediente"
+        },
+        "fecha_agregado": {
+          "type": "string (date-time)",
+          "defaultValue": "DataTypes.NOW"
+        },
+        "usuario_agregado": {
+          "type": "integer",
+          "required": true
+        },
+        "estado_firma": {
+          "type": "string (enum)",
+          "defaultValue": "pendiente'",
+          "enum": [
+            "pendiente",
+            "firmado",
+            "rechazado"
+          ]
+        },
+        "fecha_firma": {
+          "type": "string (date-time)"
+        },
+        "hash_firma": {
+          "type": "string",
+          "description": "Hash de la firma digital del documento"
+        },
+        "usuario_firmante": {
+          "type": "integer"
+        },
+        "signature_id": {
+          "type": "integer"
+        },
+        "requiere_firma": {
+          "type": "boolean",
+          "defaultValue": "true"
+        },
+        "visible_publico": {
+          "type": "boolean",
+          "defaultValue": "false",
+          "description": "Si el documento es visible al público"
+        },
+        "metadatos": {
+          "type": "object",
+          "description": "Información adicional del documento"
+        },
+        "observaciones": {
+          "type": "string"
+        },
+        "oficina_agregado_id": {
+          "type": "integer"
+        },
+        "usuario_agregado_workflow": {
+          "type": "string",
+          "description": "Usuario que agregó el documento en el workflow"
+        }
+      }
+    },
+    "expedienteWorkflow": {
+      "tableName": "ExpedienteWorkflow",
+      "description": "",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "primaryKey": true,
+          "autoIncrement": true
+        },
+        "expediente_id": {
+          "type": "integer",
+          "required": true
+        },
+        "oficina_actual_id": {
+          "type": "integer"
+        },
+        "oficina_origen_id": {
+          "type": "integer"
+        },
+        "estado": {
+          "type": "string (enum)",
+          "defaultValue": "en_tramite'",
+          "enum": [
+            "en_tramite",
+            "pendiente_revision",
+            "con_observaciones",
+            "aprobado",
+            "rechazado",
+            "archivado",
+            "derivado"
+          ]
+        },
+        "prioridad": {
+          "type": "string (enum)",
+          "defaultValue": "normal'",
+          "enum": [
+            "baja",
+            "normal",
+            "alta",
+            "urgente"
+          ]
+        },
+        "fecha_recepcion": {
+          "type": "string (date-time)"
+        },
+        "fecha_vencimiento": {
+          "type": "string (date-time)"
+        },
+        "observaciones": {
+          "type": "string"
+        },
+        "usuario_asignado": {
+          "type": "string"
+        }
+      }
+    },
+    "FirmaBatch": {
+      "tableName": "FirmaBatch",
+      "description": "",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "primaryKey": true,
+          "autoIncrement": true
+        },
+        "batch_id": {
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        "expediente_id": {
+          "type": "integer",
+          "required": true
+        },
+        "usuario_firmante": {
+          "type": "integer",
+          "required": true
+        },
+        "tipo_firma": {
+          "type": "string (enum)",
+          "required": true,
+          "enum": [
+            "batch",
+            "validez_extendida",
+            "escalonada"
+          ]
+        },
+        "signature_data": {
+          "type": "string",
+          "required": true,
+          "description": "Firma digital del batch"
+        },
+        "hash_combinado": {
+          "type": "string",
+          "required": true,
+          "description": "Hash combinado de todos los documentos"
+        },
+        "timestamp_firma": {
+          "type": "string (date-time)",
+          "defaultValue": "DataTypes.NOW"
+        },
+        "cantidad_documentos": {
+          "type": "integer",
+          "required": true
+        },
+        "datos_firmante": {
+          "type": "object",
+          "required": true,
+          "description": "Información del firmante"
+        },
+        "certificado_usado": {
+          "type": "integer"
+        },
+        "observaciones": {
+          "type": "string"
+        }
+      }
+    },
+    "FirmaHistorial": {
+      "tableName": "FirmaHistorial",
+      "description": "",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "primaryKey": true,
+          "autoIncrement": true
+        },
+        "usuario_firma_id": {
+          "type": "integer"
+        },
+        "documento_id": {
+          "type": "integer"
+        },
+        "expediente_id": {
+          "type": "integer"
+        },
+        "accion": {
+          "type": "string",
+          "required": true
+        },
+        "posicion_x": {
+          "type": "integer"
+        },
+        "posicion_y": {
+          "type": "integer"
+        },
+        "o_aplicado": {
+          "type": "string"
+        },
+        "pagina_numero": {
+          "type": "integer",
+          "defaultValue": "1"
+        },
+        "fecha_aplicacion": {
+          "type": "string (date-time)",
+          "required": true,
+          "defaultValue": "DataTypes.NOW"
+        },
+        "aplicada_por": {
+          "type": "integer"
+        },
+        "metadata": {
+          "type": "object",
+          "defaultValue": "{"
+        }
+      }
+    },
+    "oficina": {
+      "tableName": "Oficina",
+      "description": "",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "primaryKey": true,
+          "autoIncrement": true
+        },
+        "nombre": {
+          "type": "string",
+          "required": true
+        },
+        "descripcion": {
+          "type": "string"
+        },
+        "codigo": {
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        "responsable": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "telefono": {
+          "type": "string"
+        },
+        "activa": {
+          "type": "boolean",
+          "defaultValue": "true"
+        }
+      }
+    },
+    "Signature": {
+      "tableName": "Signature",
+      "description": "",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "primaryKey": true,
+          "autoIncrement": true
+        },
+        "usuario_id": {
+          "type": "integer",
+          "required": true
+        },
+        "certificado_id": {
+          "type": "integer",
+          "required": true
+        },
+        "nombre_documento": {
+          "type": "string",
+          "required": true,
+          "description": "Nombre descriptivo del documento firmado"
+        },
+        "nombre_archivo_original": {
+          "type": "string",
+          "required": true,
+          "description": "Nombre original del archivo subido"
+        },
+        "tipo_documento": {
+          "type": "string (enum)",
+          "required": true,
+          "description": "Tipo de documento firmado",
+          "enum": [
+            "oficial",
+            "no_oficial"
+          ]
+        },
+        "hash_documento": {
+          "type": "string",
+          "required": true,
+          "description": "SHA256 hash del documento original para verificar integridad"
+        },
+        "o_archivo": {
+          "type": "integer",
+          "required": true,
+          "description": "Tamaño del archivo en bytes"
+        },
+        "firma_digital": {
+          "type": "string",
+          "required": true,
+          "description": "Firma digital en formato hexadecimal"
+        },
+        "algoritmo_firma": {
+          "type": "string",
+          "required": true,
+          "defaultValue": "RSA-SHA256'",
+          "description": "Algoritmo usado para generar la firma"
+        },
+        "timestamp_firma": {
+          "type": "string (date-time)",
+          "required": true,
+          "defaultValue": "DataTypes.NOW",
+          "description": "Momento exacto en que se generó la firma"
+        },
+        "estado_firma": {
+          "type": "string (enum)",
+          "required": true,
+          "defaultValue": "valida'",
+          "description": "Estado actual de la firma digital",
+          "enum": [
+            "valida",
+            "invalida",
+            "vencida",
+            "revocada"
+          ]
+        },
+        "verificada": {
+          "type": "boolean",
+          "required": true,
+          "defaultValue": "true",
+          "description": "Si la firma ha sido verificada criptográficamente"
+        },
+        "ip_address": {
+          "type": "unknown",
+          "description": "Dirección IP desde donde se realizó la firma"
+        },
+        "user_agent": {
+          "type": "string",
+          "description": "Información del navegador/cliente usado"
+        },
+        "session_id": {
+          "type": "string",
+          "description": "ID de sesión para auditoría"
+        },
+        "validez_legal": {
+          "type": "string (enum)",
+          "required": true,
+          "description": "Nivel de validez legal de la firma",
+          "enum": [
+            "COMPLETA",
+            "INTERNA",
+            "LIMITADA"
+          ]
+        },
+        "numero_expediente": {
+          "type": "string",
+          "description": "Número de expediente asociado al documento"
+        },
+        "batch_id": {
+          "type": "string",
+          "description": "ID del batch de firma (para firmas en lote)"
+        },
+        "crl_check_status": {
+          "type": "string (enum)",
+          "required": true,
+          "defaultValue": "not_checked'",
+          "description": "Estado de verificación contra lista de revocación",
+          "enum": [
+            "valid",
+            "revoked",
+            "unknown",
+            "not_checked"
+          ]
+        },
+        "ocsp_response": {
+          "type": "object",
+          "description": "Respuesta OCSP del servidor de validación"
+        },
+        "created_at": {
+          "type": "string (date-time)",
+          "required": true,
+          "defaultValue": "DataTypes.NOW"
+        },
+        "updated_at": {
+          "type": "string (date-time)",
+          "required": true,
+          "defaultValue": "DataTypes.NOW"
+        }
+      }
+    },
+    "Usuario": {
+      "tableName": "Usuario",
+      "description": "",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "primaryKey": true,
+          "autoIncrement": true
+        },
+        "username": {
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        "nombre_completo": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        "rol_usuario": {
+          "type": "string (enum)",
+          "required": true,
+          "defaultValue": "empleado_interno'",
+          "description": "Define qué tipo de certificados puede usar",
+          "enum": [
+            "empleado_interno",
+            "funcionario_oficial",
+            "administrador"
+          ]
+        },
+        "certificado_preferido": {
+          "type": "string (enum)",
+          "description": "Certificado sugerido automáticamente según el rol",
+          "enum": [
+            "internal",
+            "government"
+          ]
+        },
+        "password_hash": {
+          "type": "string",
+          "required": true
+        },
+        "oficina_id": {
+          "type": "integer"
+        }
+      }
+    },
+    "UsuarioFirma": {
+      "tableName": "UsuarioFirma",
+      "description": "",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "primaryKey": true,
+          "autoIncrement": true
+        },
+        "usuario_id": {
+          "type": "integer",
+          "required": true
+        },
+        "firma_nombre": {
+          "type": "string",
+          "required": true
+        },
+        "firma_imagen": {
+          "type": "binary",
+          "required": true
+        },
+        "firma_tipo": {
+          "type": "string (enum)",
+          "required": true,
+          "enum": [
+            "png",
+            "jpg",
+            "jpeg",
+            "svg"
+          ]
+        },
+        "o_archivo": {
+          "type": "integer",
+          "required": true
+        },
+        "ancho_pixels": {
+          "type": "integer"
+        },
+        "alto_pixels": {
+          "type": "integer"
+        },
+        "activa": {
+          "type": "boolean",
+          "required": true,
+          "defaultValue": "true"
+        },
+        "es_predeterminada": {
+          "type": "boolean",
+          "required": true,
+          "defaultValue": "false"
+        },
+        "fecha_subida": {
+          "type": "string (date-time)",
+          "required": true,
+          "defaultValue": "DataTypes.NOW"
+        },
+        "subida_por": {
+          "type": "integer"
+        },
+        "metadatos": {
+          "type": "object",
+          "defaultValue": "{"
+        }
+      }
+    },
+    "workflowMovimiento": {
+      "tableName": "WorkflowMovimiento",
+      "description": "",
+      "fields": {
+        "id": {
+          "type": "integer",
+          "primaryKey": true,
+          "autoIncrement": true
+        },
+        "expediente_id": {
+          "type": "integer",
+          "required": true
+        },
+        "oficina_origen_id": {
+          "type": "integer"
+        },
+        "oficina_destino_id": {
+          "type": "integer",
+          "required": true
+        },
+        "estado_anterior": {
+          "type": "string"
+        },
+        "estado_nuevo": {
+          "type": "string",
+          "required": true
+        },
+        "motivo": {
+          "type": "string"
+        },
+        "observaciones": {
+          "type": "string"
+        },
+        "usuario_movimiento": {
+          "type": "string",
+          "required": true
+        },
+        "fecha_movimiento": {
+          "type": "string (date-time)",
+          "required": true,
+          "defaultValue": "DataTypes.NOW"
+        },
+        "documentos_agregados": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}
