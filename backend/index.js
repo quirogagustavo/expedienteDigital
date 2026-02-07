@@ -45,6 +45,9 @@ import firmasRoutes from './routes/firmas.js';
 // Importar rutas de gestión de certificados
 import certificadosRoutes from './routes/certificados.js';
 
+// Importar rutas de integración con Laravel
+import laravelIntegrationRoutes from './routes/laravelIntegration.js';
+
 import { initializeDefaultData } from './models/databaseExtended.js';
 
 const app = express();
@@ -82,14 +85,15 @@ async function startServer() {
     // Configurar CORS basado en el entorno
     const allowedOrigins = process.env.NODE_ENV === 'production'
       ? [
+          process.env.FRONTEND_URL,       // Frontend producción (si existe)
+          'https://edugefinancierobacktesting.sanjuan.gob.ar', // Laravel Testing
+          process.env.LARAVEL_URL,        // Laravel producción (configurable)
+        ].filter(Boolean)  // Filtrar undefined
+      : [
           'http://localhost:5174',        // Frontend desarrollo local
           'http://localhost:5175',        // Frontend desarrollo local alternativo
-          process.env.FRONTEND_URL,       // Frontend producción (cuando lo despliegues)
-        ].filter(Boolean)  // Filtrar undefined si FRONTEND_URL no está definida
-      : [
-          'http://localhost:5174',
-          'http://localhost:5175',
-          'http://localhost:5173',
+          'http://localhost:5173',        // Frontend desarrollo local
+          'https://edugefinancierobacktesting.sanjuan.gob.ar', // Laravel Testing (también en dev)
         ];
 
     app.use(cors({
@@ -184,6 +188,9 @@ app.use('/api/certificates', certificadosRoutes);
 
 // Rutas para certificados gubernamentales
 // app.use('/api/government-certificates', governmentCertificateRoutes); // Comentado temporalmente
+
+// 🔗 Rutas de integración con Laravel (Service Account)
+app.use('/api/laravel', laravelIntegrationRoutes);
 
 // Endpoint para obtener certificados del usuario
 app.get('/certificados', authenticateToken, async (req, res) => {
