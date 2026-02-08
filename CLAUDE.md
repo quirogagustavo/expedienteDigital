@@ -3,7 +3,7 @@
 > **Proyecto:** Sistema de Expediente Digital y Firma Digital
 > **Cliente:** Gobierno de San Juan, Argentina
 > **Base de datos:** expediente_digital (PostgreSQL)
-> **Última actualización:** Febrero 2026
+> **Última actualización:** 2026-02-08
 
 ---
 
@@ -50,7 +50,7 @@ expedienteDigital/
 │   ├── models/              # Modelos Sequelize (ver sección Models)
 │   ├── routes/              # Endpoints API (ver sección Routes)
 │   ├── middleware/          # Auth, validaciones
-│   ├── services/            # Service Account Pattern (en migración)
+│   ├── services/            # Service Account Pattern (7 servicios implementados)
 │   ├── migrations/          # Migraciones de BD (Umzug)
 │   ├── signature.js         # Lógica de firma digital
 │   ├── upload.js           # Configuración Multer
@@ -62,6 +62,7 @@ expedienteDigital/
 │   │   └── utils/          # Utilidades
 │   └── package.json
 ├── documentacion/           # Documentación extensa (ver README.md)
+│   └── laravel_integration/ # Guías e implementación para Laravel
 └── scripts/                # Scripts de utilidad
 ```
 
@@ -85,6 +86,16 @@ expedienteDigital/
 - `oficinas.js` - Gestión de oficinas
 - `admin.js` - Funciones administrativas
 - `laravelIntegration.js` - Integración con Laravel
+
+### Servicios Implementados (backend/services/)
+**Service Account Pattern** - Lógica de negocio encapsulada:
+- `CertificadoService.js` - Gestión de certificados digitales
+- `CertificateAuthorityService.js` - Autoridad certificadora
+- `CertificateAutoDetection.js` - Detección automática de certificados
+- `FirmaDigitalService.js` - Servicio de firma digital
+- `FirmaService.js` - Gestión de firmas realizadas
+- `GovernmentCertificateManager.js` - Certificados gubernamentales
+- `InternalCertificateManager.js` - Certificados internos
 
 ---
 
@@ -237,10 +248,34 @@ git diff                       # Ver diferencias
 - Trazabilidad completa
 
 ### 4. Integración con Laravel
-- Sistema legacy en proceso de migración
-- API `/api/laravel-integration/*`
-- Sincronización bidireccional de datos
-- Mantener compatibilidad durante transición
+**Estado:** Documentación completa e implementación lista para integración
+
+**Archivos disponibles en `documentacion/laravel_integration/`:**
+- `ExpedienteDigitalService.php` - Servicio Laravel completo para integración
+- `README_INSTALACION_LARAVEL.md` - Guía paso a paso de instalación
+- `ejemplo_uso_controller.php` - Controlador Laravel de ejemplo
+- `config_services.php` - Configuración de servicios
+- `env_example.txt` - Variables de entorno requeridas
+- `rutas_example.php` - Rutas API de ejemplo
+
+**Características de la integración:**
+- Service Account Pattern - Un usuario técnico (`laravel_service`) autentica Laravel
+- Trazabilidad completa - Cada firma guarda `laravel_user_id` y `laravel_user_email`
+- Cache automático de tokens JWT (23 horas)
+- Health check y verificación de firmas
+- Soporte para firma de documentos desde Laravel
+- Estadísticas y listados de firmas por usuario
+
+**API disponible:** `/api/laravel-integration/*`
+- POST `/auth` - Autenticación con credenciales de servicio
+- POST `/firmar` - Registrar firma desde Laravel
+- GET `/mis-firmas/:laravelUserId` - Listar firmas de un usuario
+- GET `/verificar-firma/:signatureId` - Verificar estado de firma
+- GET `/estadisticas/:laravelUserId` - Estadísticas de usuario
+
+**Documentación adicional:**
+- `documentacion/INTEGRACION_LARAVEL.md` - Documentación técnica completa
+- `documentacion/CONFIG_EDUGE_TESTING.md` - Configuración de testing
 
 ### 5. Seguridad
 
@@ -325,33 +360,40 @@ VITE_API_BASE_URL=http://localhost:4000/api
 Ver carpeta `documentacion/` para:
 - `ESTRUCTURA_BASE_DATOS.md` - Esquema completo de BD
 - `FIRMA_DIGITAL_API.md` - API de firma digital
+- `INTEGRACION_LARAVEL.md` - Documentación técnica de integración Laravel
+- `CONFIG_EDUGE_TESTING.md` - Configuración de testing
 - `DEPLOYMENT_*.md` - Guías de deployment
+- `laravel_integration/` - Archivos e instalación para Laravel
 - Múltiples archivos de referencia técnica
 
 ---
 
 ## 🎯 Prioridades de Desarrollo Actuales
 
-1. **Migración a Service Account Pattern** - Refactorizar lógica a servicios
-2. **Optimización de Performance** - Índices, queries optimizadas
-3. **Completar Workflow** - Notificaciones, alertas, reportes
-4. **Mejorar Integración Laravel** - Sincronización más robusta
+1. **✅ Integración con Laravel** - Documentación completa y servicio PHP listo para implementar
+2. **🔄 Migración a Service Account Pattern** - 7 servicios implementados, continuar refactorización
+3. **Optimización de Performance** - Índices, queries optimizadas
+4. **Completar Workflow** - Notificaciones, alertas, reportes
+5. **Testing de Integración Laravel** - Probar implementación en sistema legacy
 
 ---
 
 ## ⚠️ Cambios Recientes (últimos commits)
 
 ```
+f39d0fd - feat - cambios de logica y arquitectura del proyecto
 b7d81f1 - Cambios hacia el patron Service Account Pattern
 dc93447 - Historial de movimientos de expedientes
 ac1c687 - Optimizar performance del proyecto en VS Code
 aad3ee3 - Documentación de API de firma digital y BD
-50fc896 - Configurar frontend para usar backend de producción
 ```
 
 **Archivos modificados recientemente:**
+- `backend/services/` - 7 servicios implementados con Service Account Pattern
+- `backend/routes/laravelIntegration.js` - Endpoints de integración Laravel
 - `backend/models/oficina.js`
 - `backend/models/workflowMovimiento.js`
+- `documentacion/laravel_integration/` - Nueva carpeta con guías de integración Laravel
 - `documentacion/api/api-spec.json`
 - `documentacion/api/postman-collection.json`
 
@@ -378,5 +420,5 @@ aad3ee3 - Documentación de API de firma digital y BD
 
 ---
 
-**Última actualización:** 2026-02-07
+**Última actualización:** 2026-02-08
 **Mantenedor:** Equipo de Desarrollo - Gobierno de San Juan
