@@ -1,4 +1,6 @@
-module.exports = (sequelize, DataTypes) => {
+import { DataTypes } from 'sequelize';
+
+export default function createOficinaModel(sequelize) {
   const Oficina = sequelize.define('Oficina', {
     id: {
       type: DataTypes.INTEGER,
@@ -40,30 +42,5 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: true
   });
 
-  Oficina.associate = function(models) {
-    // Una oficina puede tener muchos expedientes actualmente
-    Oficina.hasMany(models.Expediente, {
-      foreignKey: 'oficina_actual_id',
-      as: 'expedientes_actuales'
-    });
-
-    // Una oficina puede ser origen/destino de muchos movimientos
-    Oficina.hasMany(models.WorkflowMovimiento, {
-      foreignKey: 'oficina_origen_id',
-      as: 'movimientos_enviados'
-    });
-
-    Oficina.hasMany(models.WorkflowMovimiento, {
-      foreignKey: 'oficina_destino_id',
-      as: 'movimientos_recibidos'
-    });
-
-    // Una oficina puede agregar muchos documentos
-    Oficina.hasMany(models.ExpedienteDocumento, {
-      foreignKey: 'oficina_agregado_id',
-      as: 'documentos_agregados'
-    });
-  };
-
   return Oficina;
-};
+}

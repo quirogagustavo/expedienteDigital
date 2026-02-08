@@ -1940,7 +1940,7 @@
           ]
         },
         {
-          "name": "app.use('/api/internal-certificates', internalCertificateRoutes); // Comentado temporalmente",
+          "name": "app.use('/api/government-certificates', governmentCertificateRoutes); // Comentado temporalmente",
           "request": {
             "method": "GET",
             "header": [],
@@ -1953,7 +1953,7 @@
                 "certificados"
               ]
             },
-            "description": "app.use('/api/internal-certificates', internalCertificateRoutes); // Comentado temporalmente"
+            "description": "app.use('/api/government-certificates', governmentCertificateRoutes); // Comentado temporalmente"
           },
           "response": [
             {
@@ -5274,7 +5274,392 @@
       ]
     },
     {
-      "name": "06. Autenticación",
+      "name": "06. Sin Categoría",
+      "description": "Endpoints relacionados con Sin Categoría",
+      "item": [
+        {
+          "name": "oficial | no_oficial",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/signatures/sign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "signatures",
+                "sign"
+              ]
+            },
+            "description": "oficial | no_oficial"
+          },
+          "response": [
+            {
+              "name": "401 - No autenticado",
+              "originalRequest": {},
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Token inválido o expirado\"\n}"
+            },
+            {
+              "name": "500 - Error interno del servidor",
+              "originalRequest": {},
+              "status": "Internal Server Error",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Error interno del servidor\"\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test básico de status code",
+                  "pm.test(\"Status code is successful\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "",
+                  "// Test de tiempo de respuesta",
+                  "pm.test(\"Response time is less than 3000ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "=====================================================",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/signatures/user/:laravelUserId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "signatures",
+                "user",
+                ":laravelUserId"
+              ]
+            },
+            "description": "====================================================="
+          },
+          "response": [
+            {
+              "name": "401 - No autenticado",
+              "originalRequest": {},
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Token inválido o expirado\"\n}"
+            },
+            {
+              "name": "404 - Recurso no encontrado",
+              "originalRequest": {},
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Recurso no encontrado\"\n}"
+            },
+            {
+              "name": "500 - Error interno del servidor",
+              "originalRequest": {},
+              "status": "Internal Server Error",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Error interno del servidor\"\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test básico de status code",
+                  "pm.test(\"Status code is successful\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "",
+                  "// Test de tiempo de respuesta",
+                  "pm.test(\"Response time is less than 3000ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "=====================================================",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/signatures/:signatureId/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "signatures",
+                ":signatureId",
+                "verify"
+              ]
+            },
+            "description": "====================================================="
+          },
+          "response": [
+            {
+              "name": "401 - No autenticado",
+              "originalRequest": {},
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Token inválido o expirado\"\n}"
+            },
+            {
+              "name": "404 - Recurso no encontrado",
+              "originalRequest": {},
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Recurso no encontrado\"\n}"
+            },
+            {
+              "name": "500 - Error interno del servidor",
+              "originalRequest": {},
+              "status": "Internal Server Error",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Error interno del servidor\"\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test básico de status code",
+                  "pm.test(\"Status code is successful\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "",
+                  "// Test de tiempo de respuesta",
+                  "pm.test(\"Response time is less than 3000ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "=====================================================",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/:laravelUserId/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ":laravelUserId",
+                "stats"
+              ]
+            },
+            "description": "====================================================="
+          },
+          "response": [
+            {
+              "name": "401 - No autenticado",
+              "originalRequest": {},
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Token inválido o expirado\"\n}"
+            },
+            {
+              "name": "404 - Recurso no encontrado",
+              "originalRequest": {},
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Recurso no encontrado\"\n}"
+            },
+            {
+              "name": "500 - Error interno del servidor",
+              "originalRequest": {},
+              "status": "Internal Server Error",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Error interno del servidor\"\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test básico de status code",
+                  "pm.test(\"Status code is successful\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "",
+                  "// Test de tiempo de respuesta",
+                  "pm.test(\"Response time is less than 3000ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "=====================================================",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "====================================================="
+          },
+          "response": [
+            {
+              "name": "401 - No autenticado",
+              "originalRequest": {},
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Token inválido o expirado\"\n}"
+            },
+            {
+              "name": "500 - Error interno del servidor",
+              "originalRequest": {},
+              "status": "Internal Server Error",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Error interno del servidor\"\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test básico de status code",
+                  "pm.test(\"Status code is successful\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "",
+                  "// Test de tiempo de respuesta",
+                  "pm.test(\"Response time is less than 3000ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07. Autenticación",
       "description": "Endpoints para login y gestión de tokens JWT",
       "item": [
         {
@@ -5448,7 +5833,7 @@
       ]
     },
     {
-      "name": "07. Usuarios",
+      "name": "08. Usuarios",
       "description": "Gestión de usuarios, firmas manuscritas y certificados",
       "item": [
         {
@@ -5773,7 +6158,7 @@
       ]
     },
     {
-      "name": "08. Workflow",
+      "name": "09. Workflow",
       "description": "Envío de expedientes entre oficinas y cambios de estado",
       "item": [
         {

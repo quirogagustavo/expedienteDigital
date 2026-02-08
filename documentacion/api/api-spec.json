@@ -1041,7 +1041,7 @@
           "path": "/certificados",
           "module": "Certificados",
           "sourceFile": "index.js",
-          "summary": "app.use('/api/internal-certificates', internalCertificateRoutes); // Comentado temporalmente",
+          "summary": "app.use('/api/government-certificates', governmentCertificateRoutes); // Comentado temporalmente",
           "description": "",
           "auth": true,
           "requiresAdmin": false,
@@ -2989,6 +2989,212 @@
       ]
     },
     {
+      "name": "Sin Categoría",
+      "description": "Endpoints relacionados con Sin Categoría",
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/signatures/sign",
+          "module": "Sin Categoría",
+          "sourceFile": "laravelIntegration.js",
+          "summary": "oficial | no_oficial",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "requestBody": null,
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/signatures/user/:laravelUserId",
+          "module": "Sin Categoría",
+          "sourceFile": "laravelIntegration.js",
+          "summary": "=====================================================",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "laravelUserId",
+              "type": "string",
+              "required": true,
+              "description": "ID de laravelUserId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/signatures/:signatureId/verify",
+          "module": "Sin Categoría",
+          "sourceFile": "laravelIntegration.js",
+          "summary": "=====================================================",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "signatureId",
+              "type": "string",
+              "required": true,
+              "description": "ID de signatureId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/users/:laravelUserId/stats",
+          "module": "Sin Categoría",
+          "sourceFile": "laravelIntegration.js",
+          "summary": "=====================================================",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [
+            {
+              "name": "laravelUserId",
+              "type": "string",
+              "required": true,
+              "description": "ID de laravelUserId"
+            }
+          ],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "404": {
+              "description": "Recurso no encontrado",
+              "example": {
+                "error": "Recurso no encontrado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/health",
+          "module": "Sin Categoría",
+          "sourceFile": "laravelIntegration.js",
+          "summary": "=====================================================",
+          "description": "",
+          "auth": true,
+          "requiresAdmin": false,
+          "requiresOfficeAccess": false,
+          "hasFileUpload": false,
+          "uploadField": null,
+          "pathParams": [],
+          "requestBodyHints": {
+            "hasBody": false,
+            "fields": []
+          },
+          "responses": {
+            "401": {
+              "description": "No autenticado",
+              "example": {
+                "error": "Token inválido o expirado"
+              }
+            },
+            "500": {
+              "description": "Error interno del servidor",
+              "example": {
+                "error": "Error interno del servidor"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Autenticación",
       "description": "Endpoints para login y gestión de tokens JWT",
       "routes": [
@@ -4179,7 +4385,7 @@
         }
       }
     },
-    "oficina": {
+    "Oficina": {
       "tableName": "Oficina",
       "description": "",
       "fields": {
@@ -4469,7 +4675,7 @@
         }
       }
     },
-    "workflowMovimiento": {
+    "WorkflowMovimiento": {
       "tableName": "WorkflowMovimiento",
       "description": "",
       "fields": {

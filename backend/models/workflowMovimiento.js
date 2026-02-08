@@ -1,4 +1,6 @@
-module.exports = (sequelize, DataTypes) => {
+import { DataTypes } from 'sequelize';
+
+export default function createWorkflowMovimientoModel(sequelize) {
   const WorkflowMovimiento = sequelize.define('WorkflowMovimiento', {
     id: {
       type: DataTypes.INTEGER,
@@ -52,25 +54,5 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: true
   });
 
-  WorkflowMovimiento.associate = function(models) {
-    // Pertenece a un expediente
-    WorkflowMovimiento.belongsTo(models.Expediente, {
-      foreignKey: 'expediente_id',
-      as: 'expediente'
-    });
-
-    // Pertenece a una oficina origen
-    WorkflowMovimiento.belongsTo(models.Oficina, {
-      foreignKey: 'oficina_origen_id',
-      as: 'oficina_origen'
-    });
-
-    // Pertenece a una oficina destino
-    WorkflowMovimiento.belongsTo(models.Oficina, {
-      foreignKey: 'oficina_destino_id',
-      as: 'oficina_destino'
-    });
-  };
-
   return WorkflowMovimiento;
-};
+}

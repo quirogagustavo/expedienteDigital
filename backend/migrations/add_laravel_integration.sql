@@ -31,12 +31,22 @@ COMMENT ON COLUMN expediente_documentos.laravel_user_email IS 'Email del usuario
 COMMENT ON COLUMN expediente_documentos.sistema_origen IS 'interno o laravel';
 
 -- 3. Agregar campos de integración a usuarios_firmas (firmas visuales)
-ALTER TABLE usuarios_firmas
-ADD COLUMN IF NOT EXISTS laravel_user_id INTEGER,
-ADD COLUMN IF NOT EXISTS sistema_origen VARCHAR(50) DEFAULT 'interno';
+-- Solo si la tabla existe
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'usuarios_firmas') THEN
+    ALTER TABLE usuarios_firmas
+    ADD COLUMN IF NOT EXISTS laravel_user_id INTEGER,
+    ADD COLUMN IF NOT EXISTS sistema_origen VARCHAR(50) DEFAULT 'interno';
 
-COMMENT ON COLUMN usuarios_firmas.laravel_user_id IS 'ID del usuario en Laravel';
-COMMENT ON COLUMN usuarios_firmas.sistema_origen IS 'interno o laravel';
+    COMMENT ON COLUMN usuarios_firmas.laravel_user_id IS 'ID del usuario en Laravel';
+    COMMENT ON COLUMN usuarios_firmas.sistema_origen IS 'interno o laravel';
+
+    RAISE NOTICE 'Tabla usuarios_firmas modificada correctamente';
+  ELSE
+    RAISE NOTICE 'Tabla usuarios_firmas no existe, saltando modificación (no es crítico)';
+  END IF;
+END $$;
 
 -- 4. Agregar índices para mejorar performance de búsquedas
 CREATE INDEX IF NOT EXISTS idx_signatures_laravel_user
@@ -48,8 +58,15 @@ ON signatures(sistema_origen);
 CREATE INDEX IF NOT EXISTS idx_expediente_docs_laravel_user
 ON expediente_documentos(laravel_user_id) WHERE laravel_user_id IS NOT NULL;
 
-CREATE INDEX IF NOT EXISTS idx_usuarios_firmas_laravel_user
-ON usuarios_firmas(laravel_user_id) WHERE laravel_user_id IS NOT NULL;
+-- Índice para usuarios_firmas solo si existe la tabla
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'usuarios_firmas') THEN
+    CREATE INDEX IF NOT EXISTS idx_usuarios_firmas_laravel_user
+    ON usuarios_firmas(laravel_user_id) WHERE laravel_user_id IS NOT NULL;
+    RAISE NOTICE 'Índice en usuarios_firmas creado correctamente';
+  END IF;
+END $$;
 
 -- 5. Crear vista para consultas de firmas de Laravel
 CREATE OR REPLACE VIEW v_firmas_laravel AS
