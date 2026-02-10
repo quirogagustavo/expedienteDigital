@@ -1,0 +1,391 @@
+================================================================================
+                     DOCUMENTACIÓN DE RUTAS API - BACKEND
+                    Sistema de Expediente Digital con Firma
+================================================================================
+
+Última actualización: 2026-02-09
+
+================================================================================
+ÍNDICE
+================================================================================
+1. /api/usuarios (usuarios.js)
+2. /api/certificates (certificados.js)
+3. /api/firmas (firmas.js)
+4. /api/expedientes (expedientes.js)
+5. /api/workflow (workflow.js)
+6. /api/oficinas (oficinas.js)
+7. /api/admin (admin.js)
+8. /api/laravel (laravelIntegration.js)
+
+================================================================================
+1. USUARIOS - /api/usuarios
+================================================================================
+Archivo: backend/routes/usuarios.js
+
+GET    /api/usuarios/mi-firma
+       → Obtener firma manuscrita del usuario autenticado
+       Auth: Sí | Permisos: Usuario autenticado
+
+GET    /api/usuarios/mi-firma-digital
+       → Obtener firma digital del usuario autenticado
+       Auth: Sí | Permisos: Usuario autenticado
+
+GET    /api/usuarios/mis-certificados
+       → Listar certificados del usuario con estado (vigente, vencido, por vencer)
+       Auth: Sí | Permisos: Usuario autenticado
+
+GET    /api/usuarios/certificados-publicos
+       → Listar todos los certificados (sin autenticación - solo desarrollo)
+       Auth: No | Permisos: Público
+
+
+================================================================================
+2. CERTIFICADOS - /api/certificates
+================================================================================
+Archivo: backend/routes/certificados.js
+
+GET    /api/certificates/my-certificates
+       → Obtener certificados del usuario autenticado
+       Auth: Sí | Permisos: Usuario autenticado
+
+POST   /api/certificates/import-p12
+       → Importar certificado P12/PFX con contraseña
+       Body: archivo P12/PFX + password
+       Auth: Sí | Permisos: Usuario autenticado
+
+POST   /api/certificates/generate-internal
+       → Generar certificado interno autofirmado RSA-2048
+       Auth: Sí | Permisos: Usuario autenticado
+
+POST   /api/certificates/:id/activate
+       → Activar un certificado específico (desactiva otros del mismo tipo)
+       Auth: Sí | Permisos: Usuario autenticado
+
+DELETE /api/certificates/:id
+       → Eliminar un certificado (validación: no puede ser el único activo)
+       Auth: Sí | Permisos: Usuario autenticado
+
+
+================================================================================
+3. FIRMAS - /api/firmas (firmas.js)
+================================================================================
+Archivo: backend/routes/firmas.js
+
+=== RUTAS PARA ADMINISTRADORES ===
+
+GET    /api/admin/usuarios/:id/firmas
+       → Listar todas las firmas de un usuario específico
+       Auth: Sí | Permisos: Administrador
+
+POST   /api/admin/usuarios/:id/firmas
+       → Subir nueva firma visual para un usuario
+       Body: archivo imagen (PNG, JPG, SVG) + multipart/form-data
+       Auth: Sí | Permisos: Administrador
+
+GET    /api/admin/usuarios/:id/firmas/:firmaId/imagen
+       → Obtener imagen de una firma específica
+       Auth: Sí | Permisos: Administrador
+
+PUT    /api/admin/usuarios/:id/firmas/:firmaId/predeterminada
+       → Establecer firma como predeterminada para el usuario
+       Auth: Sí | Permisos: Administrador
+
+DELETE /api/admin/usuarios/:id/firmas/:firmaId
+       → Eliminar (desactivar) una firma de usuario
+       Auth: Sí | Permisos: Administrador
+
+=== RUTAS PARA USUARIOS NORMALES ===
+
+GET    /api/usuarios/mi-firma
+       → Obtener firma predeterminada del usuario autenticado
+       Auth: Sí | Permisos: Usuario autenticado
+
+POST   /api/usuarios/mi-firma
+       → Subir firma visual propia
+       Body: archivo imagen
+       Auth: Sí | Permisos: Usuario autenticado
+
+POST   /api/usuarios/generar-firma-digital
+       → Generar firma digital automática (texto a imagen)
+       Body: { texto, estilo }
+       Auth: Sí | Permisos: Usuario autenticado
+
+GET    /api/usuarios/mi-firma-digital
+       → Obtener la firma digital generada del usuario
+       Auth: Sí | Permisos: Usuario autenticado
+
+GET    /api/usuarios/mi-firma-digital/imagen
+       → Obtener imagen de la firma digital generada
+       Auth: Sí | Permisos: Usuario autenticado
+
+DELETE /api/usuarios/mi-firma-digital/:id
+       → Eliminar firma digital del usuario
+       Auth: Sí | Permisos: Usuario autenticado
+
+GET    /api/usuarios/mi-firma/imagen
+       → Obtener imagen de la firma manuscrita del usuario
+       Auth: Sí | Permisos: Usuario autenticado
+
+DELETE /api/usuarios/mi-firma/:id
+       → Eliminar firma manuscrita del usuario
+       Auth: Sí | Permisos: Usuario autenticado
+
+=== RUTAS DE UTILIDAD ===
+
+GET    /api/firmas/tipos-permitidos
+       → Obtener tipos de archivo permitidos y recomendaciones
+       Auth: Sí | Permisos: Usuario autenticado
+
+POST   /api/firmas/validar
+       → Validar archivo de firma sin subirlo
+       Auth: Sí | Permisos: Usuario autenticado
+
+
+================================================================================
+4. EXPEDIENTES - /api/expedientes
+================================================================================
+Archivo: backend/routes/expedientes.js
+
+POST   /api/expedientes
+       → Crear nuevo expediente
+       Body: { titulo, descripcion, reparticion, estado, prioridad, metadatos }
+       Auth: Sí | Permisos: Usuario autenticado
+
+GET    /api/expedientes
+       → Listar expedientes (con paginación y filtros)
+       Query: ?estado=borrador&prioridad=alta&page=1&limit=10
+       Auth: Sí | Permisos: Admin o expedientes de su oficina
+
+GET    /api/expedientes/:id
+       → Obtener expediente específico con documentos
+       Auth: Sí | Permisos: Usuario autenticado (su oficina o responsable)
+
+GET    /api/expedientes/:id/firmas
+       → Obtener detalles del expediente con información de firmas
+       Auth: Sí | Permisos: Usuario autenticado (su oficina o responsable)
+
+POST   /api/expedientes/:id/documentos
+       → Agregar documento a expediente
+       Body: archivo + documento_nombre + documento_tipo + numero_foja
+       Auth: Sí | Permisos: Usuario autenticado (su oficina o responsable)
+
+GET    /api/expedientes/:id/documentos/:docId/archivo
+       → Servir/descargar archivo de documento (original o firmado)
+       Auth: Sí | Permisos: Usuario autenticado (su oficina)
+
+GET    /api/expedientes/:id/documentos/:docId/verificar-firma
+       → Verificar firma digital de un documento
+       Auth: Sí | Permisos: Usuario autenticado
+
+POST   /api/expedientes/:id/documentos/:docId/firmar
+       → Firmar documento del expediente
+       Body: { metodo, firmaDigital, certificado, algoritmo, timestampFirma }
+       Soporta: firma con token, firma interna, firma con certificado
+       Auth: Sí | Permisos: Usuario autenticado (su oficina o responsable)
+
+DELETE /api/expedientes/:id/documentos/:docId
+       → Eliminar documento del expediente (no permite documentos firmados)
+       Auth: Sí | Permisos: Usuario autenticado (su oficina o responsable)
+
+PATCH  /api/expedientes/:id/estado
+       → Actualizar estado del expediente
+       Body: { estado, oficina_destino_id }
+       Estados: borrador, en_proceso, consolidado, cerrado
+       Auth: Sí | Permisos: Usuario autenticado (su oficina o responsable)
+
+POST   /api/expedientes/:id/enviar
+       → Enviar expediente a otra oficina
+       Body: { oficina_destino_id, comentario }
+       Validación: todos los documentos deben estar firmados
+       Auth: Sí | Permisos: Usuario autenticado (oficina actual)
+
+GET    /api/expedientes/:id/preview
+       → Obtener previsualización completa del expediente con contenido PDF
+       Query: ?page=1&limit=5&includeContent=true
+       Auth: Sí | Permisos: Usuario autenticado
+
+GET    /api/expedientes/:id/merged-pdf
+       → Generar y servir PDF unificado del expediente completo
+       Combina todos los documentos en un solo PDF
+       Auth: Sí | Permisos: Usuario autenticado (admin o su oficina)
+
+
+================================================================================
+5. WORKFLOW - /api/workflow
+================================================================================
+Archivo: backend/routes/workflow.js
+
+POST   /api/workflow/:expedienteId/enviar-a-oficina
+       → Enviar expediente a oficina
+       Body: { oficina_destino_id, motivo, observaciones, usuario_movimiento, prioridad }
+       Auth: No especificado
+
+PUT    /api/workflow/:expedienteId/cambiar-estado
+       → Cambiar estado de expediente
+       Body: { nuevo_estado, observaciones, usuario_movimiento }
+       Auth: No especificado
+
+POST   /api/workflow/:expedienteId/agregar-documento
+       → Agregar documento a expediente desde workflow
+       Body: archivo + documento_nombre + documento_tipo + oficina_id + usuario_agregado
+       Auth: No especificado
+
+GET    /api/workflow/:expedienteId/historial
+       → Obtener historial de movimientos del expediente
+       Auth: No especificado
+
+GET    /api/workflow/:expedienteId/estado-workflow
+       → Obtener estado actual del workflow del expediente
+       Crea workflow inicial si no existe
+       Auth: No especificado
+
+POST   /api/workflow/:expedienteId/enviar
+       → Alias de enviar expediente (compatibilidad con frontend)
+       Body: { oficina_destino_id, prioridad, motivo, observaciones }
+       Auth: No especificado
+
+
+================================================================================
+6. OFICINAS - /api/oficinas
+================================================================================
+Archivo: backend/routes/oficinas.js
+
+GET    /api/oficinas
+       → Obtener todas las oficinas activas
+       Auth: Sí | Permisos: Administrador
+
+GET    /api/oficinas/disponibles/:oficina_actual_id
+       → Obtener oficinas disponibles (excluyendo la actual del usuario)
+       Auth: Sí | Permisos: Usuario autenticado
+
+GET    /api/oficinas/:id
+       → Obtener una oficina por ID
+       Auth: Sí | Permisos: Administrador
+
+POST   /api/oficinas
+       → Crear nueva oficina
+       Body: { nombre, descripcion, codigo, responsable, email, telefono }
+       Auth: Sí | Permisos: Administrador
+
+PUT    /api/oficinas/:id
+       → Actualizar oficina
+       Body: { nombre, descripcion, codigo, responsable, email, telefono, activa }
+       Auth: Sí | Permisos: Administrador
+
+DELETE /api/oficinas/:id
+       → Desactivar oficina (soft delete)
+       Auth: Sí | Permisos: Administrador
+
+GET    /api/oficinas/:id/expedientes
+       → Obtener expedientes de una oficina con filtros
+       Query: ?estado=en_proceso
+       Auth: Sí | Permisos: Administrador
+
+
+================================================================================
+7. ADMINISTRACIÓN - /api/admin
+================================================================================
+Archivo: backend/routes/admin.js
+
+GET    /api/admin/usuarios
+       → Obtener todos los usuarios con información de oficinas
+       Auth: Sí | Permisos: Administrador
+
+POST   /api/admin/usuarios
+       → Crear nuevo usuario
+       Body: { username, nombre_completo, email, password, rol_usuario, oficina_id }
+       Auth: Sí | Permisos: Administrador
+
+PUT    /api/admin/usuarios/:id
+       → Actualizar usuario
+       Body: { nombre_completo, email, rol_usuario, oficina_id }
+       Auth: Sí | Permisos: Administrador
+
+DELETE /api/admin/usuarios/:id
+       → Eliminar usuario (no permite eliminar usuario admin principal)
+       Auth: Sí | Permisos: Administrador
+
+PUT    /api/admin/usuarios/:id/password
+       → Cambiar contraseña de usuario
+       Body: { password }
+       Auth: Sí | Permisos: Administrador
+
+
+================================================================================
+8. INTEGRACIÓN LARAVEL - /api/laravel
+================================================================================
+Archivo: backend/routes/laravelIntegration.js
+Nota: Endpoints exclusivos para usuario de servicio 'eduge_service'
+
+POST   /api/laravel/signatures/sign
+       → Firmar documento desde Laravel con datos del usuario Laravel
+       Body: {
+         laravelUser: { id, email, name },
+         documentData: { nombre, hash, tipo, tamaño },
+         signatureData: { firma_digital, algoritmo, certificado_id },
+         metadata: { ip_address, user_agent, numero_expediente }
+       }
+       Auth: Sí | Permisos: Usuario de servicio 'eduge_service'
+
+GET    /api/laravel/signatures/user/:laravelUserId
+       → Obtener todas las firmas de un usuario de Laravel
+       Query: ?page=1&limit=50&estado=valida
+       Auth: Sí | Permisos: Usuario de servicio 'eduge_service'
+
+GET    /api/laravel/signatures/:signatureId/verify
+       → Verificar estado de una firma específica
+       Auth: Sí | Permisos: Usuario de servicio 'eduge_service'
+
+GET    /api/laravel/users/:laravelUserId/stats
+       → Obtener estadísticas de firmas de un usuario Laravel
+       Auth: Sí | Permisos: Usuario de servicio 'eduge_service'
+
+GET    /api/laravel/health
+       → Health check de la integración Laravel
+       Auth: Sí | Permisos: Usuario de servicio 'eduge_service'
+
+
+================================================================================
+NOTAS GENERALES
+================================================================================
+
+AUTENTICACIÓN:
+- Todas las rutas marcadas con "Auth: Sí" requieren header:
+  Authorization: Bearer <JWT_TOKEN>
+- El token JWT se obtiene del endpoint /api/auth/login (no documentado aquí)
+- Expiración del token: 24 horas
+
+ESTADOS DE EXPEDIENTE:
+- borrador: Expediente en creación
+- en_proceso: Expediente activo
+- consolidado: Expediente completo (todos los docs firmados)
+- cerrado: Expediente archivado
+
+TIPOS DE CERTIFICADO:
+- internal: Certificado interno generado por el sistema
+- government: Certificado gubernamental oficial
+- external: Certificado externo importado
+
+ROLES DE USUARIO:
+- administrador: Acceso total al sistema
+- funcionario_oficial: Puede firmar con certificados gubernamentales
+- empleado_interno: Puede firmar con certificados internos
+
+FORMATOS DE ARCHIVO SOPORTADOS:
+- Documentos: PDF, DOC, DOCX, PNG, JPG, JPEG
+- Certificados: P12, PFX
+- Firmas visuales: PNG, JPG, JPEG, SVG
+
+LÍMITES DE TAMAÑO:
+- Documentos: 10MB máximo
+- Certificados: 10MB máximo
+- Firmas visuales: 5MB máximo
+
+================================================================================
+INFORMACIÓN DE CONTACTO
+================================================================================
+Para reportar bugs o solicitar mejoras:
+- Repositorio: https://github.com/anthropics/claude-code/issues (Claude Code)
+- Documentación técnica: Ver carpeta /documentacion
+
+Última actualización: 2026-02-09

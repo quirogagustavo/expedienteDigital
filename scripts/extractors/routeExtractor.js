@@ -22,7 +22,29 @@ const FILE_TO_MODULE = {
   'workflow.js': 'Workflow',
   'oficinas.js': 'Oficinas',
   'admin.js': 'Administración',
+  'laravelIntegration.js': 'Laravel Integration',
   'debug.js': null // Excluir debug
+};
+
+// Mapeo de archivos de rutas a prefijos de URL (según app.use en index.js)
+const FILE_TO_PREFIX = {
+  'login.js': '',
+  'usuarios.js': '/api/usuarios',
+  'expedientes.js': '/api/expedientes',
+  'certificados.js': '/api/certificates',
+  'certificateRoutes.js': '/api',
+  'certificateRoutesSimple.js': '/api',
+  'governmentCertificateRoutes.js': '/api/government-certificates',
+  'internalCertificateRoutes.js': '/api/internal-certificates',
+  'smartCertificateRoutes.js': '/api/certificates',
+  'firmas.js': '/api',
+  'firmaDocumentos.js': '/api/firma-documentos',
+  'signatureRoutes.js': '/api/signatures',
+  'workflow.js': '/api/workflow',
+  'oficinas.js': '/api/oficinas',
+  'admin.js': '/api/admin',
+  'laravelIntegration.js': '/api/laravel',
+  'debug.js': ''
 };
 
 /**
@@ -48,9 +70,10 @@ export async function extractRoutes(routesDir) {
 
     const filePath = path.join(routesDir, file);
     const content = fs.readFileSync(filePath, 'utf-8');
+    const prefix = FILE_TO_PREFIX[file] || '';
 
     // Extraer endpoints del archivo
-    const routes = extractRoutesFromFile(content, file, module || 'Sin Categoría');
+    const routes = extractRoutesFromFile(content, file, module || 'Sin Categoría', prefix);
     allRoutes.push(...routes);
 
     console.log(`   ✓ ${file}: ${routes.length} endpoints`);
@@ -76,7 +99,7 @@ export async function extractRoutes(routesDir) {
 /**
  * Extrae endpoints de un archivo individual
  */
-function extractRoutesFromFile(content, filename, module) {
+function extractRoutesFromFile(content, filename, module, prefix = '') {
   const routes = [];
 
   // Regex para detectar definiciones de rutas
@@ -98,6 +121,9 @@ function extractRoutesFromFile(content, filename, module) {
     // Detectar middleware
     const middlewareInfo = detectMiddleware(afterContext);
 
+    // Construir path completo con prefijo
+    const fullPath = prefix + routePath;
+
     // Detectar parámetros del path
     const pathParams = extractPathParams(routePath);
 
@@ -106,10 +132,10 @@ function extractRoutesFromFile(content, filename, module) {
 
     const route = {
       method: method.toUpperCase(),
-      path: routePath,
+      path: fullPath,
       module,
       sourceFile: filename,
-      summary: comment.summary || `${method.toUpperCase()} ${routePath}`,
+      summary: comment.summary || `${method.toUpperCase()} ${fullPath}`,
       description: comment.description || '',
       auth: middlewareInfo.auth,
       requiresAdmin: middlewareInfo.requiresAdmin,

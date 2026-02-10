@@ -30,9 +30,10 @@ const Certificado = sequelize.define('Certificado', {
     defaultValue: true
   },
   status: {
-    type: DataTypes.ENUM,
-    values: ['pending', 'active', 'expired', 'revoked', 'rejected'],
-    defaultValue: 'active'
+    type: DataTypes.STRING(50),
+    defaultValue: 'active',
+    allowNull: true
+    // Valores esperados: 'pending', 'active', 'expired', 'revoked', 'rejected', 'valid'
   },
   validation_data: {
     type: DataTypes.JSON,
@@ -51,9 +52,10 @@ const Certificado = sequelize.define('Certificado', {
     allowNull: true // Distinguished Name del sujeto
   },
   tipo: {
-    type: DataTypes.ENUM,
-    values: ['internal', 'government'],
-    defaultValue: 'internal'
+    type: DataTypes.STRING(50),
+    defaultValue: 'internal',
+    allowNull: true
+    // Valores esperados: 'internal', 'government'
   },
   numero_serie: {
     type: DataTypes.STRING,
