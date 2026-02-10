@@ -20,15 +20,15 @@ const Usuario = sequelize.define('Usuario', {
     allowNull: false,
     unique: true
   },
-  rol: {
-    type: DataTypes.STRING(50), // Cambiado de ENUM a STRING para coincidir con BD
+  rol_usuario: {
+    type: DataTypes.STRING(50), // VARCHAR para coincidir con BD actual
     allowNull: false,
     defaultValue: 'empleado_interno',
     comment: 'Define qué tipo de certificados puede usar'
     // Valores esperados: 'empleado_interno', 'funcionario_oficial', 'administrador'
   },
   certificado_preferido: {
-    type: DataTypes.STRING(50), // Cambiado de ENUM a STRING para coincidir con BD
+    type: DataTypes.STRING(50), // VARCHAR para coincidir con BD actual
     allowNull: true,
     comment: 'Certificado sugerido automáticamente según el rol'
     // Valores esperados: 'internal', 'government'
