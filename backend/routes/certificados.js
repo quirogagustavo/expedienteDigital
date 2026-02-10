@@ -312,7 +312,7 @@ router.post('/generate-internal', authenticateToken, async (req, res) => {
       fecha_expiracion: cert.validity.notAfter,
       certificado_pem: certPem,
       clave_privada_pem: privateKeyPem,
-      status: 'valid',
+      status: 'active', // Cambiado de 'valid' a 'active' para coincidir con el enum de BD
       activo: true,
       emisor: 'Sistema de Expedientes Digitales',
       metadata: JSON.stringify({

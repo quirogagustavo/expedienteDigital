@@ -33,7 +33,8 @@ const Certificado = sequelize.define('Certificado', {
     type: DataTypes.STRING(50),
     defaultValue: 'active',
     allowNull: true
-    // Valores esperados: 'pending', 'active', 'expired', 'revoked', 'rejected', 'valid'
+    // Valores válidos del enum certificado_status_enum: 'pending', 'active', 'expired', 'revoked', 'rejected'
+    // IMPORTANTE: El enum en BD no incluye 'valid', usar 'active' para certificados válidos/activos
   },
   validation_data: {
     type: DataTypes.JSON,

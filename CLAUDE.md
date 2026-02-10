@@ -3,7 +3,7 @@
 > **Proyecto:** Sistema de Expediente Digital y Firma Digital
 > **Cliente:** Gobierno de San Juan, Argentina
 > **Base de datos:** expediente_digital (PostgreSQL)
-> **Última actualización:** 2026-02-08
+> **Última actualización:** 2026-02-10
 
 ---
 
@@ -76,16 +76,33 @@ expedienteDigital/
 - `WorkflowMovimiento.js` - Movimientos de expedientes
 - `UsuarioFirma.js` - Firmas visuales de usuarios
 - `FirmaHistorial.js` - Historial de firmas
+- `FirmaBatch.js` - Firmas en lote
+- `Document.js` - Documentos generales
+- `CertificateAuthority.js` - Autoridades certificadoras
+- `CertificateType.js` - Tipos de certificados
+- `expedienteWorkflow.js` - Workflow de expedientes
+- `database.js` - Configuración de base de datos Sequelize
+- `databaseExtended.js` - Extensión de configuración BD
+- `index.js` - Exportación centralizada de modelos
 
 ### Rutas Principales (backend/routes/)
 - `usuarios.js` - CRUD de usuarios
-- `certificados.js` - Gestión de certificados
+- `login.js` - Autenticación y login
+- `certificados.js` - Gestión de certificados (legacy)
+- `certificateRoutes.js` - Rutas de certificados modernas
+- `certificateRoutesSimple.js` - Rutas simplificadas de certificados
+- `governmentCertificateRoutes.js` - Certificados gubernamentales
+- `internalCertificateRoutes.js` - Certificados internos
+- `smartCertificateRoutes.js` - Detección inteligente de certificados
 - `firmas.js` - Firma de documentos
+- `firmaDocumentos.js` - Firma de documentos específicos
+- `signatureRoutes.js` - Rutas de firmas avanzadas
 - `expedientes.js` - Gestión de expedientes
 - `workflow.js` - Workflow de movimientos
 - `oficinas.js` - Gestión de oficinas
 - `admin.js` - Funciones administrativas
 - `laravelIntegration.js` - Integración con Laravel
+- `debug.js` - Rutas de debugging (desarrollo)
 
 ### Servicios Implementados (backend/services/)
 **Service Account Pattern** - Lógica de negocio encapsulada:
@@ -133,6 +150,15 @@ export default router;
 const express = require('express');
 module.exports = router;
 ```
+
+**⚠️ Importante - Compatibilidad de Exportación:**
+Algunos modelos usan export dual para mayor compatibilidad:
+```javascript
+// Patrón de export dual (Oficina.js, otros modelos)
+export default defineOficina;
+export { defineOficina };
+```
+Esto permite importar tanto con `import Oficina from './Oficina.js'` como con `import { defineOficina }`, resolviendo problemas de compatibilidad con Sequelize y rutas.
 
 #### Modelos Sequelize
 ```javascript
@@ -220,7 +246,7 @@ git diff                       # Ver diferencias
 - ✅ NO usar `sync({ alter: true })` - puede perder datos
 - ✅ Crear migración manual para cada cambio de esquema
 
-### 2. Sistema de Firma Digital
+### 2. Sistema de Firma Digital y Certificados
 
 **Flujo de Firma:**
 1. Usuario selecciona documento
@@ -234,6 +260,20 @@ git diff                       # Ver diferencias
 - `internal` - Certificados generados internamente
 - `government` - Certificados gubernamentales oficiales
 - Tokens PKCS#11 externos
+
+**Sistema de Certificados (Multi-ruta):**
+El sistema implementa múltiples endpoints para gestión de certificados:
+- `certificateRoutes.js` - API moderna de certificados
+- `certificateRoutesSimple.js` - API simplificada
+- `governmentCertificateRoutes.js` - Específica para certificados gubernamentales
+- `internalCertificateRoutes.js` - Específica para certificados internos
+- `smartCertificateRoutes.js` - Detección automática de tipo de certificado
+
+**⚠️ Fix Reciente (commit 11bdc78):**
+Se corrigieron errores en la creación de certificados relacionados con:
+- Validación de datos de entrada
+- Generación de claves privadas/públicas
+- Almacenamiento en base de datos
 
 ### 3. Workflow de Expedientes
 
@@ -302,6 +342,19 @@ empleado_interno → Firma con cert. internos + consulta expedientes
 - Soporte para múltiples firmas por usuario
 - Pueden ser dibujadas o cargadas como imagen
 
+### 7. Optimización de Performance (commit ac1c687)
+**Configuración VS Code:**
+- Exclusión de `node_modules` en búsquedas
+- Deshabilitación de watchers innecesarios
+- Configuración de memory limits
+- Optimización de indexación de archivos
+
+**Consideraciones:**
+- Base de datos: usar índices en columnas frecuentemente consultadas
+- Queries: preferir `findOne` sobre `findAll` cuando sea posible
+- Joins: limitar profundidad de asociaciones
+- Cache: implementar cache de JWT tokens (integración Laravel)
+
 ---
 
 ## 🔄 Flujos de Trabajo Clave
@@ -351,10 +404,14 @@ VITE_API_BASE_URL=http://localhost:4000/api
 ### Endpoints Principales
 - **Auth:** `/api/auth/login`, `/api/auth/register`
 - **Usuarios:** `/api/usuarios/*`
+- **Certificados:** `/api/certificados/*`, `/api/certificates/*`, `/api/government-certificates/*`, `/api/internal-certificates/*`, `/api/smart-certificates/*`
+- **Firmas:** `/api/firmas/*`, `/api/firma-documentos/*`, `/api/signatures/*`
 - **Expedientes:** `/api/expedientes/*`
-- **Firmas:** `/api/firmas/*`
 - **Workflow:** `/api/workflow/*`
 - **Oficinas:** `/api/oficinas/*`
+- **Admin:** `/api/admin/*`
+- **Laravel Integration:** `/api/laravel-integration/*`
+- **Debug:** `/api/debug/*` (solo desarrollo)
 
 ### Documentación Adicional
 Ver carpeta `documentacion/` para:
@@ -371,31 +428,42 @@ Ver carpeta `documentacion/` para:
 ## 🎯 Prioridades de Desarrollo Actuales
 
 1. **✅ Integración con Laravel** - Documentación completa y servicio PHP listo para implementar
-2. **🔄 Migración a Service Account Pattern** - 7 servicios implementados, continuar refactorización
-3. **Optimización de Performance** - Índices, queries optimizadas
-4. **Completar Workflow** - Notificaciones, alertas, reportes
-5. **Testing de Integración Laravel** - Probar implementación en sistema legacy
+2. **🔄 Migración a Service Account Pattern** - 7 servicios implementados, continuar refactorización de rutas legacy
+3. **✅ Sistema de Certificados Mejorado** - Múltiples rutas para certificados (government, internal, smart detection)
+4. **✅ Fix de Certificados** - Corrección de errores en creación de certificados (commit 11bdc78)
+5. **📝 Documentación IA** - CLAUDE.md implementado para mejor colaboración con herramientas IA
+6. **Optimización de Performance** - Índices, queries optimizadas, configuración VS Code mejorada
+7. **Completar Workflow** - Notificaciones, alertas, reportes
+8. **Testing de Integración Laravel** - Probar implementación en sistema legacy
 
 ---
 
 ## ⚠️ Cambios Recientes (últimos commits)
 
 ```
+11bdc78 - fix - para corregir errores al crear certificado
+6b6e30d - add - claude.md (documentación para IA)
 f39d0fd - feat - cambios de logica y arquitectura del proyecto
 b7d81f1 - Cambios hacia el patron Service Account Pattern
 dc93447 - Historial de movimientos de expedientes
 ac1c687 - Optimizar performance del proyecto en VS Code
 aad3ee3 - Documentación de API de firma digital y BD
+50fc896 - Configurar frontend para usar backend de producción
+3afcfd1 - Usar sequelize en lugar de modelo Oficina (workaround export issue)
+417565d - Export default y por nombre para Oficina y modelos (compatibilidad ESM)
 ```
 
 **Archivos modificados recientemente:**
+- `CLAUDE.md` - Documentación para IA (agregada en commit 6b6e30d)
 - `backend/services/` - 7 servicios implementados con Service Account Pattern
-- `backend/routes/laravelIntegration.js` - Endpoints de integración Laravel
-- `backend/models/oficina.js`
-- `backend/models/workflowMovimiento.js`
-- `documentacion/laravel_integration/` - Nueva carpeta con guías de integración Laravel
-- `documentacion/api/api-spec.json`
-- `documentacion/api/postman-collection.json`
+- `backend/routes/` - 17 rutas totales (certificados, firmas, workflow, Laravel integration)
+- `backend/models/` - 17 modelos (agregados FirmaBatch, CertificateAuthority, CertificateType)
+- `backend/models/Oficina.js` - Compatibilidad ESM con export default + named export
+- `backend/models/WorkflowMovimiento.js` - Modelo de movimientos de workflow
+- `documentacion/laravel_integration/` - Guías completas de integración Laravel
+- `documentacion/INTEGRACION_LARAVEL.md` - Documentación técnica de integración
+- `documentacion/CONFIG_EDUGE_TESTING.md` - Configuración de testing
+- `frontend/` - Configurado para usar backend de producción
 
 ---
 
@@ -420,5 +488,16 @@ aad3ee3 - Documentación de API de firma digital y BD
 
 ---
 
-**Última actualización:** 2026-02-08
+**Última actualización:** 2026-02-10
 **Mantenedor:** Equipo de Desarrollo - Gobierno de San Juan
+
+---
+
+## 📊 Estadísticas del Proyecto
+
+- **Total de Modelos:** 17 modelos Sequelize
+- **Total de Rutas:** 17 archivos de rutas (endpoints)
+- **Total de Servicios:** 7 servicios implementados (Service Account Pattern)
+- **Migraciones:** Sistema Umzug (manual, sin sequelize-cli)
+- **Estado del Repositorio:** Working tree clean
+- **Branch Principal:** main
