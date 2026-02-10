@@ -88,9 +88,10 @@ class InternalCertificateManager {
   static isCertificateValid(certificado) {
     try {
       const now = new Date();
+      const fechaVencimiento = certificado.fecha_vencimiento || certificado.fecha_expiracion;
       return (
         certificado.fecha_emision <= now &&
-        certificado.fecha_expiracion > now &&
+        fechaVencimiento > now &&
         certificado.activo === true
       );
     } catch (error) {
@@ -147,7 +148,7 @@ class InternalCertificateManager {
         clave_privada_pem: certificateData.clave_privada_pem,
         clave_publica_pem: certificateData.clave_publica_pem,
         fecha_emision: new Date(),
-        fecha_expiracion: certificateData.metadata.validTo,
+        fecha_vencimiento: certificateData.metadata.validTo,
         activo: true,
         numero_serie: certificateData.metadata.serialNumber,
         emisor: 'CA Interna - Gobierno San Juan'
@@ -169,8 +170,9 @@ class InternalCertificateManager {
 
   // Renovar certificado próximo a vencer
   static async renewCertificateIfNeeded(certificado) {
+    const fechaVencimiento = certificado.fecha_vencimiento || certificado.fecha_expiracion;
     const diasParaVencer = Math.ceil(
-      (certificado.fecha_expiracion - new Date()) / (1000 * 60 * 60 * 24)
+      (fechaVencimiento - new Date()) / (1000 * 60 * 60 * 24)
     );
 
     // Renovar si faltan menos de 30 días

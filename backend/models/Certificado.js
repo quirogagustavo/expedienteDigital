@@ -8,6 +8,14 @@ const Certificado = sequelize.define('Certificado', {
     primaryKey: true,
     autoIncrement: true
   },
+  usuario_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'usuarios',
+      key: 'id'
+    }
+  },
   nombre_certificado: {
     type: DataTypes.STRING(200)
   },
@@ -22,8 +30,19 @@ const Certificado = sequelize.define('Certificado', {
   fecha_emision: {
     type: DataTypes.DATE
   },
+  fecha_vencimiento: {
+    type: DataTypes.DATE,
+    allowNull: true // Permitir null temporalmente durante migración
+  },
   fecha_expiracion: {
-    type: DataTypes.DATE
+    type: DataTypes.VIRTUAL,
+    get() {
+      // Alias para compatibilidad con código legacy
+      return this.getDataValue('fecha_vencimiento');
+    },
+    set(value) {
+      this.setDataValue('fecha_vencimiento', value);
+    }
   },
   activo: {
     type: DataTypes.BOOLEAN,

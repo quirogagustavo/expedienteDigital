@@ -61,7 +61,7 @@ router.get('/my-certificates', authenticateToken, async (req, res) => {
       include: [{
         model: Certificado,
         as: 'certificados',
-        attributes: ['id', 'nombre_certificado', 'tipo', 'fecha_emision', 'fecha_expiracion', 'activo', 'numero_serie']
+        attributes: ['id', 'nombre_certificado', 'tipo', 'fecha_emision', 'fecha_vencimiento', 'activo', 'numero_serie']
       }]
     });
 
@@ -72,10 +72,11 @@ router.get('/my-certificates', authenticateToken, async (req, res) => {
     // Calcular estado de cada certificado
     const certificadosConEstado = usuario.certificados.map(cert => {
       const ahora = new Date();
-      const diasParaVencer = Math.ceil((cert.fecha_expiracion - ahora) / (1000 * 60 * 60 * 24));
-      
+      const fechaVencimiento = cert.fecha_vencimiento || cert.fecha_expiracion;
+      const diasParaVencer = Math.ceil((fechaVencimiento - ahora) / (1000 * 60 * 60 * 24));
+
       let estado = 'vigente';
-      if (cert.fecha_expiracion < ahora) estado = 'vencido';
+      if (fechaVencimiento < ahora) estado = 'vencido';
       else if (diasParaVencer <= 30) estado = 'por_vencer';
       else if (!cert.activo) estado = 'inactivo';
 
