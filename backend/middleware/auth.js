@@ -34,10 +34,10 @@ export const authenticateToken = async (req, res, next) => {
 
 // Middleware para verificar que el usuario sea administrador
 export const requireAdmin = (req, res, next) => {
-  if (req.user.rol_usuario !== 'administrador') {
-    return res.status(403).json({ 
+  if (req.user.rol !== 'administrador') {
+    return res.status(403).json({
       error: 'Acceso denegado. Solo los administradores pueden realizar esta acción.',
-      rol_actual: req.user.rol_usuario 
+      rol_actual: req.user.rol
     });
   }
   next();

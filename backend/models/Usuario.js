@@ -20,16 +20,18 @@ const Usuario = sequelize.define('Usuario', {
     allowNull: false,
     unique: true
   },
-  rol_usuario: {
-    type: DataTypes.ENUM('empleado_interno', 'funcionario_oficial', 'administrador'),
+  rol: {
+    type: DataTypes.STRING(50), // Cambiado de ENUM a STRING para coincidir con BD
     allowNull: false,
     defaultValue: 'empleado_interno',
     comment: 'Define qué tipo de certificados puede usar'
+    // Valores esperados: 'empleado_interno', 'funcionario_oficial', 'administrador'
   },
   certificado_preferido: {
-    type: DataTypes.ENUM('internal', 'government'),
+    type: DataTypes.STRING(50), // Cambiado de ENUM a STRING para coincidir con BD
     allowNull: true,
     comment: 'Certificado sugerido automáticamente según el rol'
+    // Valores esperados: 'internal', 'government'
   },
   password_hash: {
     type: DataTypes.STRING(255),
@@ -43,6 +45,11 @@ const Usuario = sequelize.define('Usuario', {
       key: 'id'
     },
     comment: 'Oficina a la que pertenece el usuario para control de acceso'
+  },
+  activo: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+    allowNull: true
   }
 }, {
   tableName: 'usuarios'
